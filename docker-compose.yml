@@ -160,6 +160,7 @@ services:
       NODE_ENV: production
       PORT: 9992
       INTERNAL_API_URL: http://web-api:9991
+      DATABASE_URL: ${DATABASE_URL:-postgresql://umbreon_admin:Umbr30n_Pg_S3cur3_P@ss_2026!@postgres:5432/umbreon_db}
       VITE_API_URL: ${VITE_API_URL:-http://localhost:9991}
       VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
     ports:
