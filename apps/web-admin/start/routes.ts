@@ -329,6 +329,7 @@ router
 router
   .group(() => {
     router.get('/digiflazz/products', [ProvidersController, 'digiflazzProducts'])
+    router.get('/digiflazz/saldo', [ProvidersController, 'digiflazzSaldo'])
   })
   .prefix('/admin/providers')
   .middleware(middleware.role(UserRole.ADMIN))

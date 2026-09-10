@@ -48,7 +48,7 @@ type Banner = {
   updated_at?: string | Date | null
 }
 
-function AddBannerDialog() {
+function AddBannerDialog({ trigger }: { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false)
   const form = useForm<CreateBannerValidator>({
     title: '',
@@ -130,12 +130,17 @@ function AddBannerDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Tambah Banner</Button>
+        {trigger || (
+          <Button className="gap-1.5 shadow-sm">
+            <Plus className="size-4" />
+            Tambah Banner
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Tambah Banner</DialogTitle>
-          <DialogDescription>Isi data banner di bawah ini.</DialogDescription>
+          <DialogTitle>Tambah Banner Promosi</DialogTitle>
+          <DialogDescription>Isi detail banner promosi di bawah ini.</DialogDescription>
         </DialogHeader>
 
         <form className="space-y-4" onSubmit={submit}>
@@ -162,11 +167,11 @@ function AddBannerDialog() {
           </div>
 
           <div>
-            <Label htmlFor="image">Image</Label>
+            <Label htmlFor="image">Image Banner</Label>
             <FileManager onFilesSelected={(f) => form.setData('image_id', (f as any).id)} />
             {form.data.image_id && (
-              <p className="text-xs text-green-600 mt-1">
-                Image selected (ID: {form.data.image_id})
+              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+                ✓ Image selected (ID: {form.data.image_id})
               </p>
             )}
             {form.errors.image_id && (
@@ -197,10 +202,11 @@ function AddBannerDialog() {
           </div>
 
           <div>
-            <Label htmlFor="href_url">Href URL</Label>
+            <Label htmlFor="href_url">Href URL (External Web Link)</Label>
             <Input
               id="href_url"
-              value={form.data.href_url}
+              placeholder="https://..."
+              value={form.data.href_url || ''}
               onChange={(e) => form.setData('href_url', e.target.value)}
             />
             {form.errors.href_url && (
@@ -209,10 +215,11 @@ function AddBannerDialog() {
           </div>
 
           <div>
-            <Label htmlFor="app_url">App URL</Label>
+            <Label htmlFor="app_url">App URL (Internal App Link)</Label>
             <Input
               id="app_url"
-              value={form.data.app_url}
+              placeholder="/promo/..."
+              value={form.data.app_url || ''}
               onChange={(e) => form.setData('app_url', e.target.value)}
             />
             {form.errors.app_url && (
@@ -220,22 +227,22 @@ function AddBannerDialog() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center gap-2">
+          <div className="space-y-4 pt-2 border-t">
+            <div className="flex items-center space-x-2">
               <Switch
                 id="is_available"
                 checked={!!form.data.is_available}
-                onCheckedChange={(v) => form.setData('is_available', v)}
+                onCheckedChange={(c) => form.setData('is_available', c)}
               />
-              <Label htmlFor="is_available">Aktif</Label>
+              <Label htmlFor="is_available">Aktifkan Banner</Label>
             </div>
             <div>
-              <Label htmlFor="product_category_id">Product Category (opsional)</Label>
+              <Label htmlFor="product_category_id">Product Category (Opsional)</Label>
               <Input
                 id="product_category_search"
                 value={categoryQuery}
                 onChange={(e) => setCategoryQuery(e.target.value)}
-                placeholder="Cari kategori..."
+                placeholder="Cari kategori produk terkait..."
               />
               {isSearchingCategory && (
                 <p className="text-xs text-muted-foreground mt-1">Mencari…</p>
@@ -275,7 +282,7 @@ function AddBannerDialog() {
 
           <DialogFooter>
             <Button type="submit" disabled={form.processing}>
-              Simpan
+              {form.processing ? 'Menyimpan...' : 'Simpan Banner'}
             </Button>
           </DialogFooter>
         </form>
@@ -289,24 +296,31 @@ function DeleteBannerDialog({ title, onConfirm }: { title: string; onConfirm?: (
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+        >
           Hapus
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Hapus banner?</DialogTitle>
-          <DialogDescription>Ini hanya UI. Tekan Hapus untuk konfirmasi.</DialogDescription>
+          <DialogDescription>
+            Apakah Anda yakin ingin menghapus banner <strong>"{title}"</strong>?
+          </DialogDescription>
         </DialogHeader>
-        <p className="text-sm">
-          Banner: <span className="font-medium">{title}</span>
-        </p>
-        <DialogFooter>
+        <DialogFooter className="mt-4 flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
+            Batal
+          </Button>
           <Button
             variant="destructive"
+            size="sm"
             onClick={() => {
-              onConfirm?.()
               setOpen(false)
+              if (onConfirm) onConfirm()
             }}
           >
             Hapus
@@ -331,7 +345,7 @@ export default function BannersIndex({ banners }: Props) {
         accessorKey: 'image_url',
         header: 'Image',
         cell: ({ row }) => (
-          <div className="w-16 h-10 border rounded-md overflow-hidden bg-muted flex items-center justify-center">
+          <div className="w-20 h-11 border rounded-lg overflow-hidden bg-muted/60 flex items-center justify-center shadow-xs">
             {row.original.image_url ? (
               <Image
                 src={row.original.image_url}
@@ -358,8 +372,15 @@ export default function BannersIndex({ banners }: Props) {
         accessorKey: 'is_available',
         header: 'Status',
         cell: ({ row }) => (
-          <Badge className={row.original.is_available ? 'bg-green-600' : 'bg-muted-foreground'}>
-            {row.original.is_available ? 'Active' : 'Hidden'}
+          <Badge
+            variant={row.original.is_available ? 'default' : 'secondary'}
+            className={
+              row.original.is_available
+                ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-medium'
+                : 'bg-muted text-muted-foreground'
+            }
+          >
+            {row.original.is_available ? 'Aktif' : 'Disembunyikan'}
           </Badge>
         ),
       },
@@ -382,7 +403,7 @@ export default function BannersIndex({ banners }: Props) {
         id: 'actions',
         header: 'Actions',
         cell: ({ row }) => (
-          <div className="flex gap-2">
+          <div className="flex justify-end">
             <DeleteBannerDialog
               title={row.original.title}
               onConfirm={() =>
@@ -401,12 +422,40 @@ export default function BannersIndex({ banners }: Props) {
 
   return (
     <AdminLayout>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Banners</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Banners Promosi</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Kelola gambar banner dan slider promosi di beranda aplikasi toko.
+          </p>
+        </div>
         <AddBannerDialog />
       </div>
 
-      <DataTable columns={columns} data={items} />
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-card/50 p-12 text-center">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3 shadow-xs">
+            <ImageIcon className="size-7" />
+          </div>
+          <h3 className="text-base font-semibold text-foreground">Belum Ada Banner Promo</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mt-1 mb-5">
+            Unggah banner visual untuk menarik perhatian pengunjung dan menampilkan penawaran
+            spesial di beranda storefront.
+          </p>
+          <AddBannerDialog
+            trigger={
+              <Button className="gap-1.5 shadow-sm">
+                <Plus className="size-4" />
+                Upload Banner Pertama
+              </Button>
+            }
+          />
+        </div>
+      ) : (
+        <div className="rounded-xl border border-border/70 bg-card overflow-hidden shadow-sm">
+          <DataTable columns={columns} data={items} />
+        </div>
+      )}
     </AdminLayout>
   )
 }

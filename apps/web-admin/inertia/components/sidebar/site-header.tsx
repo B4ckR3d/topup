@@ -4,6 +4,7 @@ import { usePage } from '@inertiajs/react'
 import { Button } from '@umbreon/ui/components/ui/button'
 import { useSidebar } from '@umbreon/ui/components/ui/sidebar'
 import { Dot, PanelLeft } from 'lucide-react'
+import { DigiflazzStatusButton } from './digiflazz-status-button'
 import { SearchForm } from './search-form'
 
 export function SiteHeader() {
@@ -42,6 +43,7 @@ export function SiteHeader() {
             <span className="truncate capitalize">{toTitleCase(sectionName)}</span>
           </div>
         </div>
+        <DigiflazzStatusButton />
         <SearchForm className="hidden lg:block lg:w-[260px]" />
       </div>
     </header>

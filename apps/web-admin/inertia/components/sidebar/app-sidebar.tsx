@@ -292,24 +292,29 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton
               size="lg"
               asChild
-              className="rounded-md border border-border/70 bg-card/85 shadow-sm transition-colors hover:bg-card"
+              className="rounded-lg border border-border/80 bg-gradient-to-r from-card to-card/90 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
             >
               <Link href="/admin">
-                <div className="flex aspect-square size-9 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
-                  <Building2 className="size-4" />
+                <div className="flex aspect-square size-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-sm">
+                  <Building2 className="size-4.5" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate text-[13px] font-semibold tracking-[0.08em] text-foreground uppercase">
-                    Umbreon Store
+                  <div className="flex items-center gap-1.5">
+                    <span className="truncate text-[13px] font-bold tracking-wider text-foreground uppercase">
+                      Umbreon Store
+                    </span>
+                    <span className="inline-block size-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                  <span className="truncate text-[11px] text-muted-foreground font-medium">
+                    Control Center
                   </span>
-                  <span className="truncate text-xs text-muted-foreground">Control Center</span>
                 </div>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent className="px-2.5 py-3">
+      <SidebarContent className="px-2.5 py-3 overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-border/60 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
         <NavMain items={data.navMain} />
         <NavMain items={data.config} title="Config" />
       </SidebarContent>

@@ -34,4 +34,24 @@ export default class ProvidersController {
       data,
     })
   }
+
+  async digiflazzSaldo(ctx: HttpContext) {
+    try {
+      const digiflazz = new DigiflazzService(axios)
+      const res = await digiflazz.checkSaldo()
+      return ctx.response.json({
+        success: true,
+        connected: true,
+        saldo: res.saldo,
+        message: 'Koneksi Digiflazz Normal',
+      })
+    } catch (err: any) {
+      console.error('[ProvidersController] Digiflazz checkSaldo error:', err)
+      return ctx.response.status(400).json({
+        success: false,
+        connected: false,
+        error: err?.message || 'Gagal terhubung ke API Digiflazz',
+      })
+    }
+  }
 }

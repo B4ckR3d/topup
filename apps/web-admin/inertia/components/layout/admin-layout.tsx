@@ -28,7 +28,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="[--header-height:calc(--spacing(16))]">
-      <SidebarProvider className="flex flex-col">
+      <SidebarProvider
+        className="flex flex-col"
+        style={
+          {
+            '--sidebar-width': '18.5rem',
+            '--sidebar-width-mobile': '20rem',
+          } as React.CSSProperties
+        }
+      >
         <SiteHeader />
         <div className="flex flex-1">
           <AppSidebar />
