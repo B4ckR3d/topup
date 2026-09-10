@@ -234,6 +234,35 @@ router
       ])
       .as('productCategories.editPostpaidBPJSKetenagakerjaan')
 
+    // postpaid fallbacks
+    router
+      .get('/postpaid', (ctx) =>
+        ctx.response.redirect('/admin/product-categories/postpaid/tagihan-pln'),
+      )
+      .as('productCategories.postpaid.root')
+    router.get('/postpaid/pln-non-taglist', (ctx) =>
+      ctx.response.redirect('/admin/product-categories/postpaid/tagihan-pln'),
+    )
+    router.get('/postpaid/kuota-rekomendasi', (ctx) =>
+      ctx.response.redirect('/admin/product-categories/postpaid/tagihan-pln'),
+    )
+    router.get('/postpaid/other-postpaid', (ctx) =>
+      ctx.response.redirect('/admin/product-categories/postpaid/tagihan-pln'),
+    )
+
+    // special features & aliases fallbacks
+    router.get('/app-premium', (ctx) =>
+      ctx.response.redirect('/admin/product-categories/other-prepaid'),
+    )
+    router.get('/send-money', (ctx) => ctx.response.redirect('/admin/product-categories'))
+    router.get('/e-wallet-bebas-nominal', (ctx) =>
+      ctx.response.redirect('/admin/product-categories/e-wallet'),
+    )
+    router.get('/e-money', (ctx) => ctx.response.redirect('/admin/product-categories/e-wallet'))
+    router.get('/kereta-api', (ctx) =>
+      ctx.response.redirect('/admin/product-categories/other-prepaid'),
+    )
+
     // any
     router
       .get('/get-json', [ProductCategoryController, 'getProductCategoryByCategoryNameJson'])
@@ -385,6 +414,16 @@ router
 
 router
   .group(() => {
+    router
+      .get('/', (ctx) => ctx.response.redirect('/admin/payments/categories'))
+      .as('payments.root')
+  })
+  .prefix('/admin/payments')
+  .middleware(middleware.role(UserRole.ADMIN))
+
+router
+  .group(() => {
+    router.get('/', (ctx) => ctx.response.redirect('/admin/offers/voucher')).as('offers.root')
     router.get('/voucher', [OfferController, 'indexVoucher']).as('offers.indexVoucher')
     router.get('/voucher/create', [OfferController, 'createVoucher']).as('offers.createVoucher')
     router.get('/voucher/:id/edit', [OfferController, 'editVoucher']).as('offers.editVoucher')
@@ -471,7 +510,15 @@ router
 router
   .group(() => {
     router
+      .get('/', (ctx) => ctx.response.redirect('/admin/config/home/product-sections'))
+      .as('config.root')
+
+    router
       .group(() => {
+        router
+          .get('/', (ctx) => ctx.response.redirect('/admin/config/home/product-sections'))
+          .as('configHome.root')
+
         router
           .group(() => {
             router.get('/', [ConfigFastMenuController, 'index']).as('configFastMenu.index')
@@ -546,6 +593,9 @@ router
       })
       .prefix('/home')
 
+    router
+      .get('/settings', (ctx) => ctx.response.redirect('/admin/config/settings/general'))
+      .as('configSettings.root')
     router.get('/settings/general', [ConfigSettingsController, 'index'])
     router.patch('/settings/general', [ConfigSettingsController, 'update'])
 
@@ -565,6 +615,8 @@ router
 
 router
   .group(() => {
+    router.get('/', (ctx) => ctx.response.redirect('/admin/blog/articles')).as('blog.root')
+
     router
       .group(() => {
         router.get('/', [ArticleCategoriesController, 'index']).as('articleCategories.index')

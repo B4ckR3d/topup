@@ -73,10 +73,6 @@ const data = {
           url: '/admin/product-categories/voucher',
         },
         {
-          title: 'App Premium',
-          url: '/admin/product-categories/app-premium',
-        },
-        {
           title: 'Other Prepaid',
           url: '/admin/product-categories/other-prepaid',
         },
@@ -89,16 +85,8 @@ const data = {
       isActive: false,
       items: [
         {
-          title: 'All Products',
-          url: '/admin/product-categories/postpaid',
-        },
-        {
           title: 'PLN Tagihan (Postpaid)',
           url: '/admin/product-categories/postpaid/tagihan-pln',
-        },
-        {
-          title: 'PLN Non Taglist (Postpaid)',
-          url: '/admin/product-categories/postpaid/pln-non-taglist',
         },
         {
           title: 'PDAM',
@@ -109,44 +97,12 @@ const data = {
           url: '/admin/product-categories/postpaid/internet',
         },
         {
-          title: 'Kuota Rekomendasi',
-          url: '/admin/product-categories/postpaid/kuota-rekomendasi',
-        },
-        {
           title: 'BPJS Kesehatan',
           url: '/admin/product-categories/postpaid/bpjs-kesehatan',
         },
         {
           title: 'BPJS Ketenagakerjaan',
           url: '/admin/product-categories/postpaid/bpjs-ketenagakerjaan',
-        },
-        {
-          title: 'Other Postpaid',
-          url: '/admin/product-categories/postpaid/other-postpaid',
-        },
-      ],
-    },
-    {
-      title: 'Products Fitur Khusus',
-      url: '#',
-      icon: Zap,
-      isActive: false,
-      items: [
-        {
-          title: 'Send Money',
-          url: '/admin/product-categories/send-money',
-        },
-        {
-          title: 'Ewallet (Bebas Nominal)',
-          url: '/admin/product-categories/e-wallet-bebas-nominal',
-        },
-        {
-          title: 'E-Money',
-          url: '/admin/product-categories/e-money',
-        },
-        {
-          title: 'Kereta Api',
-          url: '/admin/product-categories/kereta-api',
         },
       ],
     },
