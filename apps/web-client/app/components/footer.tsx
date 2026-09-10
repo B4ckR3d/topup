@@ -4,8 +4,7 @@ import { appConfigAtom } from '~/store/app-config'
 
 export default function FooterSection() {
   const appConfig = useAtomValue(appConfigAtom)
-  const appName =
-    appConfig.appName && appConfig.appName !== 'Umbreon Store' ? appConfig.appName : 'Aldi Network'
+  const appName = appConfig.appName || 'Umbreon Store'
 
   return (
     <footer className="bg-secondary mt-16 p-4">
@@ -21,9 +20,7 @@ export default function FooterSection() {
               transparan
             </p>
             <address className="not-italic mt-4 text-xs leading-relaxed text-muted-foreground text-center md:text-start max-w-full lg:max-w-2/3">
-              Desa Pandemulyo, Kec. Bulu,
-              <br className="hidden md:block" />
-              Kab. Temanggung, Jawa Tengah, Kode Pos 56253
+              Indonesia
             </address>
 
             <h2 className="font-semibold mt-8 text-center md:text-start text-foreground">

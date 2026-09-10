@@ -342,7 +342,7 @@ export default class UsersController {
 
     const secret = TwoFactorService.generateUserSecret()
     const recoveryCodes = TwoFactorService.generateRecoveryCodes(6)
-    const otpAuthUrl = TwoFactorService.getOtpAuthUrl(user.email, 'Pepek Admin', secret)
+    const otpAuthUrl = TwoFactorService.getOtpAuthUrl(user.email, 'Umbreon Store Admin', secret)
 
     return response.json({
       secret,

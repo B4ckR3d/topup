@@ -57,7 +57,6 @@ export class HomeService {
         label: true,
       },
       where: and(
-        eq(tb.productCategories.is_available, true),
         eq(tb.productGroupings.menu_type, ProductGroupingMenuType.FAST_MENU),
         eq(tb.productGroupings.is_available, true),
       ),
@@ -86,7 +85,9 @@ export class HomeService {
     })
 
     const newFastMenus = fastMenus.map((section) => {
-      const products = section.productCategories.map((pc) => pc.productCategory)
+      const products = section.productCategories
+        .map((pc) => pc.productCategory)
+        .filter((product) => Boolean(product) && product.is_available)
       delete section.productCategories
       return {
         ...section,
@@ -105,7 +106,6 @@ export class HomeService {
   public async getHomeProductSections() {
     const homeProductSections = await this.databaseService.db.query.productGroupings.findMany({
       where: and(
-        eq(tb.productCategories.is_available, true),
         eq(tb.productGroupings.menu_type, ProductGroupingMenuType.HOME_MENU),
         eq(tb.productGroupings.is_available, true),
       ),
@@ -143,7 +143,9 @@ export class HomeService {
     })
 
     const newHomeProductSections = homeProductSections.map((section) => {
-      const products = section.productCategories.map((pc) => pc.productCategory)
+      const products = section.productCategories
+        .map((pc) => pc.productCategory)
+        .filter((product) => Boolean(product) && product.is_available)
 
       delete section.productCategories
 

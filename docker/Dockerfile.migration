@@ -24,5 +24,5 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @umbreon/configs build
 RUN pnpm --filter @umbreon/db build
 
-# Default command: push/sync database schema
-CMD ["pnpm", "--filter", "@umbreon/db", "db:push", "--force"]
+# Default command: push/sync database schema and seed default data
+CMD ["sh", "-c", "pnpm --filter @umbreon/db db:push --force && pnpm --filter @umbreon/db db:seed"]

@@ -39,15 +39,8 @@ export default function HomeProductSections() {
     )
   }
 
-  if (productSections.isError) {
-    return (
-      <section className="mt-10 space-y-2">
-        <h2 className="text-xl font-semibold text-foreground">Product Sections</h2>
-        <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-          Error loading product sections
-        </div>
-      </section>
-    )
+  if (productSections.isError || !productSections.data || productSections.data.length === 0) {
+    return null
   }
 
   const sections = productSections.data ?? []

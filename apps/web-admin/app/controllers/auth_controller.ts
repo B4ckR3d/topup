@@ -187,12 +187,12 @@ export default class AuthController {
 
   public async login({ inertia }: HttpContext) {
     return inertia.render('auth/login', {
-      title: 'Pepek Login',
+      title: 'Umbreon Store Login',
       description:
-        'Masuk ke dashboard admin dengan kredensial akun dan autentikator 2FA terverifikasi.',
+        'Masuk ke dashboard admin Umbreon Store dengan akun dan autentikator 2FA terverifikasi.',
       twoFactorRequired: TwoFactorService.isRequired(),
       defaultTwoFactorSecret: TwoFactorService.getAdminSecret(),
-      otpAuthUrl: TwoFactorService.getOtpAuthUrl('admin@umbreon.store', 'Pepek Admin'),
+      otpAuthUrl: TwoFactorService.getOtpAuthUrl('admin@umbreon.store', 'Umbreon Store Admin'),
     })
   }
 

@@ -69,9 +69,14 @@ case "$ACTION" in
         fi
         ;;
     migrate)
-        echo -e "${CYAN}[*] Menjalankan migrasi database...${NC}"
+        echo -e "${CYAN}[*] Menjalankan migrasi database dan seed admin/kategori...${NC}"
         docker compose run --rm --build migration
-        echo -e "${GREEN}[✔] Migrasi database selesai!${NC}"
+        echo -e "${GREEN}[✔] Migrasi dan seeding database selesai!${NC}"
+        ;;
+    seed)
+        echo -e "${CYAN}[*] Menjalankan seeding data admin & kategori produk...${NC}"
+        docker compose run --rm --build migration pnpm --filter @umbreon/db db:seed
+        echo -e "${GREEN}[✔] Seeding data selesai!${NC}"
         ;;
     status|ps)
         docker compose ps

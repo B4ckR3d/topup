@@ -68,15 +68,8 @@ export default function FastMenu() {
     )
   }
 
-  if (fastmenus.isError) {
-    return (
-      <section className="mt-4 space-y-2">
-        <h2 className="text-lg font-bold">Menu Cepat</h2>
-        <div className="rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-          Error loading fast menu
-        </div>
-      </section>
-    )
+  if (fastmenus.isError || !fastmenus.data || fastmenus.data.length === 0) {
+    return null
   }
 
   return (

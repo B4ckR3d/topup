@@ -60,9 +60,14 @@ switch ($Action.ToLower()) {
         }
     }
     "migrate" {
-        Write-Host "[*] Menjalankan migrasi database..." -ForegroundColor Cyan
+        Write-Host "[*] Menjalankan migrasi database dan seed data..." -ForegroundColor Cyan
         docker compose run --rm --build migration
         Write-Host "[✔] Migrasi database selesai!" -ForegroundColor Green
+    }
+    "seed" {
+        Write-Host "[*] Menjalankan seeding data admin & kategori produk..." -ForegroundColor Cyan
+        docker compose run --rm --build migration pnpm --filter @umbreon/db db:seed
+        Write-Host "[✔] Seeding data selesai!" -ForegroundColor Green
     }
     "status" {
         docker compose ps

@@ -51,7 +51,7 @@ export class TwoFactorService {
   /**
    * Default Base32 secret for Admin TOTP (Google Authenticator / Authy)
    */
-  public static readonly DEFAULT_SECRET = 'PEPEKADMIN2FASECRET2026KEY123'
+  public static readonly DEFAULT_SECRET = 'UMBREONADMIN2FASECRET2026KEY123'
   public static readonly DEFAULT_BACKUP_CODE = '123456'
 
   public static getAdminSecret(): string {
@@ -232,7 +232,7 @@ export class TwoFactorService {
    */
   public static getOtpAuthUrl(
     account = 'admin@umbreon.store',
-    issuer = 'Pepek Admin',
+    issuer = 'Umbreon Store Admin',
     secret = TwoFactorService.getAdminSecret(),
   ): string {
     const encodedIssuer = encodeURIComponent(issuer)

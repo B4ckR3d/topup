@@ -19,10 +19,10 @@ export default function Register() {
       <header className="relative z-10 w-full px-6 py-6 sm:px-10 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-sm">P</span>
+            <span className="text-white font-bold text-sm">U</span>
           </div>
           <span className="font-bold text-slate-900 tracking-tight text-base sm:text-lg">
-            Pepek Admin
+            Umbreon Store Admin
           </span>
         </div>
       </header>
@@ -47,7 +47,7 @@ export default function Register() {
             className="w-full py-3 px-4 bg-slate-900 hover:bg-black text-white text-sm font-semibold rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Kembali ke Pepek Login</span>
+            <span>Kembali ke Login</span>
           </Link>
         </div>
       </div>
