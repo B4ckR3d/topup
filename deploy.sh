@@ -80,17 +80,26 @@ case "$ACTION" in
         echo -e "${YELLOW}[*] Membersihkan container, network, dan image yang tidak terpakai...${NC}"
         docker compose down --remove-orphans
         docker image prune -f
+        docker builder prune -f
         echo -e "${GREEN}[✔] Bersih!${NC}"
+        ;;
+    fresh|rebuild)
+        echo -e "${GREEN}[+] Membangun ulang seluruh container dari nol (tanpa cache)...${NC}"
+        docker compose build --no-cache
+        docker compose up -d --force-recreate
+        echo -e "${GREEN}[✔] Selesai rebuild dan deploy!${NC}"
+        docker compose ps
         ;;
     *)
         echo -e "Penggunaan: ./deploy.sh [perintah]"
         echo -e "Perintah yang tersedia:"
         echo -e "  up        : Build dan jalankan seluruh container di background (default)"
+        echo -e "  rebuild   : Build ulang semua container dari nol tanpa cache (bersih)"
         echo -e "  down      : Hentikan seluruh container"
         echo -e "  restart   : Restart semua container (atau ./deploy.sh restart <service>)"
         echo -e "  logs      : Lihat live streaming log (atau ./deploy.sh logs <service>)"
         echo -e "  migrate   : Jalankan sinkronisasi schema database"
         echo -e "  status    : Cek status kesehatan container"
-        echo -e "  clean     : Bersihkan image & container yatim (orphan)"
+        echo -e "  clean     : Bersihkan image & build cache yang tidak terpakai"
         ;;
 esac

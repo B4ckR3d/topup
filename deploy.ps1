@@ -74,17 +74,26 @@ switch ($Action.ToLower()) {
         Write-Host "[*] Membersihkan container, network, dan image yang tidak terpakai..." -ForegroundColor Yellow
         docker compose down --remove-orphans
         docker image prune -f
+        docker builder prune -f
         Write-Host "[✔] Bersih!" -ForegroundColor Green
+    }
+    "rebuild" {
+        Write-Host "[+] Membangun ulang seluruh container dari nol (tanpa cache)..." -ForegroundColor Green
+        docker compose build --no-cache
+        docker compose up -d --force-recreate
+        Write-Host "[✔] Selesai rebuild dan deploy!" -ForegroundColor Green
+        docker compose ps
     }
     default {
         Write-Host "Penggunaan: .\deploy.ps1 [perintah]"
         Write-Host "Perintah yang tersedia:"
         Write-Host "  up        : Build dan jalankan seluruh container di background (default)"
+        Write-Host "  rebuild   : Build ulang semua container dari nol tanpa cache (bersih)"
         Write-Host "  down      : Hentikan seluruh container"
         Write-Host "  restart   : Restart semua container (atau .\deploy.ps1 restart <service>)"
         Write-Host "  logs      : Lihat live streaming log (atau .\deploy.ps1 logs <service>)"
         Write-Host "  migrate   : Jalankan sinkronisasi schema database"
         Write-Host "  status    : Cek status kesehatan container"
-        Write-Host "  clean     : Bersihkan image & container yatim (orphan)"
+        Write-Host "  clean     : Bersihkan image & build cache yang tidak terpakai"
     }
 }
