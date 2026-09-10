@@ -75,6 +75,7 @@ router
     router.post('/:id/add-balance', [UserController, 'addBalance']).as('users.addBalance')
     router.post('/:id/deduct-balance', [UserController, 'deductBalance']).as('users.deductBalance')
     router.post('/:id/2fa/generate', [UserController, 'generate2Fa']).as('users.generate2Fa')
+    router.get('/:id/2fa/generate', [UserController, 'generate2Fa']).as('users.generate2Fa.get')
     router.post('/:id/2fa/enable', [UserController, 'enable2Fa']).as('users.enable2Fa')
     router.post('/:id/2fa/disable', [UserController, 'disable2Fa']).as('users.disable2Fa')
   })

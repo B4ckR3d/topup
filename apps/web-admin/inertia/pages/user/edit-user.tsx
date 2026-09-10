@@ -33,6 +33,7 @@ import {
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import type { UpdateUserValidator } from '#validators/user'
+import { apiClient } from '~/utils/axios'
 
 type Props = {
   user: UpdateUserValidator & {
@@ -86,23 +87,19 @@ export default function EditUserModal({ user }: Props) {
   const handleGenerate2Fa = async () => {
     setIs2FaLoading(true)
     try {
-      const res = await fetch(`/admin/users/${user.id}/2fa/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-      const result = await res.json()
-      if (res.ok) {
-        setGenerated2Fa(result)
+      const res = await apiClient.get(`/admin/users/${user.id}/2fa/generate`)
+      if (res.data && res.data.secret) {
+        setGenerated2Fa(res.data)
         setIsSettingUp2Fa(true)
         toast.success('Secret key 2FA baru berhasil dibuat.')
       } else {
-        toast.error(result.error || 'Gagal membuat secret key 2FA')
+        toast.error(res.data?.error || 'Gagal membuat secret key 2FA')
       }
-    } catch {
-      toast.error('Terjadi kesalahan koneksi.')
+    } catch (err: any) {
+      console.error('[2FA Setup Error]:', err)
+      toast.error(
+        err?.response?.data?.error || err?.message || 'Terjadi kesalahan koneksi saat membuat 2FA.',
+      )
     } finally {
       setIs2FaLoading(false)
     }
