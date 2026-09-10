@@ -39,6 +39,11 @@ router.get('/', async ({ response }) => {
   return response.redirect('/admin')
 })
 
+// Public static image proxy from MinIO to prevent Mixed Content
+router
+  .get('/storage/images/:fileName', [FileManagerController, 'serveImage'])
+  .as('fileManagers.serveImage')
+
 router
   .group(() => {
     router.get('/register', [AuthController, 'register']).as('auth.register')

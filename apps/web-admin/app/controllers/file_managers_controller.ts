@@ -19,12 +19,48 @@ import {
 export default class FileManagersController {
   private getS3PublicBase() {
     const customUrl = env.get('VITE_S3_URL') || env.get('S3_URL')
-    if (customUrl) {
+    if (customUrl && !customUrl.includes(':9000')) {
       return customUrl.replace(/\/+$/, '')
     }
-    const endpoint = (env.get('S3_ENDPOINT') || 'http://84.247.148.122:9000').replace(/\/+$/, '')
-    const bucket = env.get('S3_BUCKET') || env.get('S3_BUCKET_NAME') || 'umbreon'
-    return `${endpoint}/${bucket}`
+    return ''
+  }
+
+  public async serveImage({ params, response }: HttpContext) {
+    try {
+      const fileName = params.fileName
+      if (!fileName || fileName.includes('..') || fileName.includes('/')) {
+        return response.status(400).send('Invalid file name')
+      }
+
+      const disk = drive.use('s3')
+      const filePath = `storage/images/${fileName}`
+
+      const exists = await disk.exists(filePath)
+      if (!exists) {
+        return response.status(404).send('Image not found')
+      }
+
+      const stream = await disk.getStream(filePath)
+
+      const ext = fileName.split('.').pop()?.toLowerCase()
+      const mimeTypes: Record<string, string> = {
+        webp: 'image/webp',
+        png: 'image/png',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        svg: 'image/svg+xml',
+        gif: 'image/gif',
+        avif: 'image/avif',
+      }
+      const mimeType = (ext && mimeTypes[ext]) || 'image/webp'
+
+      response.header('Content-Type', mimeType)
+      response.header('Cache-Control', 'public, max-age=31536000, immutable')
+      return response.stream(stream)
+    } catch (error) {
+      console.error('[FileManager] Failed to serve image:', error)
+      return response.status(500).send('Error loading image')
+    }
   }
 
   public async upload(ctx: HttpContext) {

@@ -71,6 +71,27 @@ function FileUploadDropzone({ onFilesSelected }: { onFilesSelected?: (files: Fil
   )
 }
 
+function resolveFileUrl(url?: string | null): string {
+  if (!url) return ''
+  if (url.includes(':9000/umbreon/')) {
+    return url.split(':9000/umbreon')[1]
+  }
+  if (url.includes(':9000/')) {
+    return url.split(':9000')[1]
+  }
+  if (url.startsWith('/storage/')) {
+    return url
+  }
+  if (/^https?:\/\//i.test(url)) {
+    return url
+  }
+  const s3Url = (import.meta.env.VITE_S3_URL || '').trim()
+  if (s3Url && !s3Url.includes(':9000')) {
+    return `${s3Url.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`
+  }
+  return url.startsWith('/') ? url : `/${url}`
+}
+
 export default function FileManager({
   onFilesSelected,
   defaultFileId,
@@ -300,7 +321,7 @@ export default function FileManager({
         {selectedFile?.url ? (
           <div className="rounded-md border border-border/70 flex items-center justify-center overflow-hidden">
             <img
-              src={`${import.meta.env.VITE_S3_URL || 'http://84.247.148.122:9000/umbreon'}${selectedFile.url}`}
+              src={resolveFileUrl(selectedFile.url)}
               alt={selectedFile.name || ''}
               className="object-contain max-h-28 max-w-full"
             />
@@ -339,7 +360,7 @@ export default function FileManager({
                         onChange={() => toggleSelectedFileId(file.id)}
                       />
                       <img
-                        src={`${import.meta.env.VITE_S3_URL || 'http://84.247.148.122:9000/umbreon'}${file.url}`}
+                        src={resolveFileUrl(file.url)}
                         alt={file.name || ''}
                         onClick={() => setSelectedFile(file)}
                         className={`shadow rounded-md border transition-colors w-full object-contain ${selectedFile?.id === file.id ? 'border-primary/40 ring-1 ring-primary/15' : 'border-transparent'}`}

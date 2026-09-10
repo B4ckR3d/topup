@@ -34,21 +34,38 @@ export class StorageService implements OnModuleInit {
     return path
   }
 
-  async deleteFile(filePath: string): Promise<void> {
-    await this.disk.delete(filePath)
+  async fileExists(filePath: string): Promise<boolean> {
+    const cleanPath = filePath.replace(/^\/+/, '')
+    return this.disk.exists(cleanPath)
+  }
+
+  async getFileStream(filePath: string): Promise<NodeJS.ReadableStream> {
+    const cleanPath = filePath.replace(/^\/+/, '')
+    return this.disk.getStream(cleanPath)
   }
 
   getFileUrl(filePath?: string): string {
     if (!filePath) return null
-    if (filePath.startsWith('http')) return filePath
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      if (filePath.includes(':9000/umbreon/')) {
+        filePath = filePath.split(':9000/umbreon')[1]
+      } else if (filePath.includes(':9000/')) {
+        filePath = filePath.split(':9000')[1]
+      } else {
+        return filePath
+      }
+    }
 
-    const cleanPath = filePath.replace(/^\//, '')
+    const cleanPath = filePath.replace(/^\/+/, '')
 
     const rawUrl =
-      this.configService.get<string>('S3_CDN_URL') ||
-      this.configService.get<string>('S3_URL') ||
-      'http://84.247.148.122:9000'
+      this.configService.get<string>('S3_CDN_URL') || this.configService.get<string>('S3_URL') || ''
     const publicUrl = rawUrl.replace(/\/+$/, '')
+
+    if (!publicUrl || publicUrl.includes(':9000')) {
+      return `/${cleanPath}`
+    }
+
     const bucketName = this.configService.get<string>('S3_BUCKET_NAME') || 'umbreon'
 
     if (publicUrl.endsWith(`/${bucketName}`)) {

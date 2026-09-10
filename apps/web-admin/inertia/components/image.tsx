@@ -4,15 +4,27 @@ type ImageProps = React.ImgHTMLAttributes<HTMLImageElement> & {
   baseUrl?: string
 }
 
-function resolveSrc(src: string, baseUrl: string) {
-  // if src already absolute (http/https), return as-is
+function resolveSrc(src: string, baseUrl?: string) {
+  if (!src) return ''
+  if (src.includes(':9000/umbreon/')) {
+    return src.split(':9000/umbreon')[1]
+  }
+  if (src.includes(':9000/')) {
+    return src.split(':9000')[1]
+  }
+  if (src.startsWith('/storage/')) {
+    return src
+  }
   if (/^https?:\/\//i.test(src)) return src
   const base = baseUrl?.replace(/\/+$/g, '')
-  if (src.startsWith('/')) return `${base}${src}`
-  return `${base}/${src}`
+  if (base && !base.includes(':9000')) {
+    if (src.startsWith('/')) return `${base}${src}`
+    return `${base}/${src}`
+  }
+  return src.startsWith('/') ? src : `/${src}`
 }
 
-const _baseUrl = import.meta.env.VITE_S3_URL || 'http://84.247.148.122:9000/umbreon'
+const _baseUrl = import.meta.env.VITE_S3_URL
 
 export default function Image({ src, baseUrl = _baseUrl, ...rest }: ImageProps) {
   const finalSrc =
