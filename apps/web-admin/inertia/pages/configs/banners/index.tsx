@@ -1,4 +1,3 @@
-import type { InferPageProps } from '@adonisjs/inertia/types'
 import { router, useForm } from '@inertiajs/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { BannerLocation } from '@umbreon/db/types'
@@ -25,16 +24,15 @@ import {
 } from '@umbreon/ui/components/ui/select'
 import { Switch } from '@umbreon/ui/components/ui/switch'
 import { Textarea } from '@umbreon/ui/components/ui/textarea'
+import { ImageIcon, Plus } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import type BannersController from '#controllers/banners_controller'
+import type BannersController from '#controllers/configs/banners_controller'
 import type { CreateBannerValidator } from '#validators/banners'
 import FileManager from '~/components/file-manager'
 import Image from '~/components/image'
 import AdminLayout from '~/components/layout/admin-layout'
 import { formatDate } from '~/utils'
 import { apiClient } from '~/utils/axios'
-
-type Props = InferPageProps<BannersController, 'index'>
 
 type Banner = {
   id: string
@@ -46,6 +44,10 @@ type Banner = {
   product_category_id: string | null
   created_at?: string | Date | null
   updated_at?: string | Date | null
+}
+
+type Props = {
+  banners?: Banner[]
 }
 
 function AddBannerDialog({ trigger }: { trigger?: React.ReactNode }) {
