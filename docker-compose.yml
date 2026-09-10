@@ -221,10 +221,13 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-Umbr30n_M1n10_S3cur3_2026!}
     entrypoint: >
       /bin/sh -c "
-      sleep 2;
-      mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      until mc alias set myminio http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD; do
+        echo 'Menunggu MinIO siap...';
+        sleep 1;
+      done;
       mc mb myminio/umbreon --ignore-existing;
       mc anonymous set public myminio/umbreon;
+      echo 'Bucket umbreon siap!';
       exit 0;
       "
     networks:

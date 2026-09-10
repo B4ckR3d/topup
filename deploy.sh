@@ -78,6 +78,11 @@ case "$ACTION" in
         docker compose run --rm --build migration pnpm --filter @umbreon/db db:seed
         echo -e "${GREEN}[✔] Seeding data selesai!${NC}"
         ;;
+    bucket|minio)
+        echo -e "${CYAN}[*] Menginisialisasi bucket MinIO storage...${NC}"
+        docker compose run --rm createbuckets
+        echo -e "${GREEN}[✔] MinIO bucket siap!${NC}"
+        ;;
     status|ps)
         docker compose ps
         ;;

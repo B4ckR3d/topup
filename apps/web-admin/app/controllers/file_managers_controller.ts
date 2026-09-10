@@ -14,8 +14,6 @@ import {
   deleteFilesValidator,
   deleteFileValidator,
   listFileQueryValidator,
-  uploadFilesValidator,
-  uploadFileValidator,
 } from '#validators/file_manager'
 
 export default class FileManagersController {
@@ -31,70 +29,99 @@ export default class FileManagersController {
 
   public async upload(ctx: HttpContext) {
     try {
-      const data = await ctx.request.validateUsing(vine.compile(uploadFileValidator))
+      const file = ctx.request.file('file') || ctx.request.file('files')
+      if (!file) {
+        return ctx.response.status(400).json({
+          error: 'Tidak ada file yang dipilih untuk diunggah.',
+        })
+      }
+
+      if (!file.isValid) {
+        return ctx.response.status(400).json({
+          error: file.errors?.[0]?.message || 'File yang dipilih tidak valid.',
+        })
+      }
 
       const disk = drive.use('s3')
+      const s3PublicBase = this.getS3PublicBase()
 
-      if (data.file.type === 'image') {
-        const fileBuffer = await fs.readFile(data.file.tmpPath!)
+      if (!file.tmpPath) {
+        return ctx.response.status(400).json({
+          error: 'File sementara tidak ditemukan di server.',
+        })
+      }
 
-        const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex')
-        const filePath = `storage/images/${fileHash}.webp`
-        const s3PublicBase = this.getS3PublicBase()
+      const fileBuffer = await fs.readFile(file.tmpPath)
+      const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex')
+      const filePath = `storage/images/${fileHash}.webp`
 
-        const exist = await disk.exists(filePath)
+      let exist = false
+      try {
+        exist = await disk.exists(filePath)
+      } catch (storageErr: any) {
+        console.error('[FileManager] MinIO storage check failed:', storageErr)
+        return ctx.response.status(500).json({
+          error: `Koneksi MinIO/S3 bermasalah: ${storageErr?.message || storageErr}`,
+        })
+      }
 
-        if (exist) {
-          const existing = await db.query.fileManager.findFirst({
-            where: eq(tb.fileManager.name, `${fileHash}.webp`),
+      if (exist) {
+        const existing = await db.query.fileManager.findFirst({
+          where: eq(tb.fileManager.name, `${fileHash}.webp`),
+        })
+        if (existing) {
+          return ctx.response.json({
+            message: 'File already exists',
+            file: {
+              id: existing.id,
+              name: existing.name,
+              url: `${s3PublicBase}/storage/images/${fileHash}.webp`,
+            },
           })
-          if (existing) {
-            return ctx.response.json({
-              message: 'File already exists',
-              file: {
-                id: existing.id,
-                name: existing.name,
-                url: `${s3PublicBase}/storage/images/${fileHash}.webp`,
-              },
-            })
-          }
         }
+      }
 
-        const convertedImage = await sharp(data.file.tmpPath).toFormat('webp').toBuffer()
+      let convertedImage: Buffer
+      try {
+        convertedImage = await sharp(file.tmpPath).toFormat('webp').toBuffer()
+      } catch {
+        convertedImage = fileBuffer
+      }
 
+      try {
         await disk.put(filePath, convertedImage, {
           visibility: 'public',
         })
-
-        const fileSize = await disk.getBytes(filePath)
-        // save to db
-        const save = await db
-          .insert(tb.fileManager)
-          .values({
-            name: `${fileHash}.webp`,
-            url: `/storage/images/${fileHash}.webp`,
-            size: fileSize.byteLength,
-            mime_type: 'image/webp',
-          })
-          .returning()
-
-        return ctx.response.json({
-          message: 'File uploaded successfully',
-          file: {
-            id: save[0].id,
-            name: `${fileHash}.webp`,
-            url: `${s3PublicBase}/storage/images/${fileHash}.webp`,
-          },
-        })
-      } else {
-        return ctx.response.status(400).json({
-          error: 'Unsupported file type. Only images are allowed.',
+      } catch (putErr: any) {
+        console.error('[FileManager] MinIO put failed:', putErr)
+        return ctx.response.status(500).json({
+          error: `Gagal menyimpan file ke MinIO/S3: ${putErr?.message || putErr}`,
         })
       }
+
+      const fileSize = convertedImage.byteLength
+      const save = await db
+        .insert(tb.fileManager)
+        .values({
+          name: `${fileHash}.webp`,
+          url: `/storage/images/${fileHash}.webp`,
+          size: fileSize,
+          mime_type: 'image/webp',
+        })
+        .returning()
+
+      return ctx.response.json({
+        message: 'File uploaded successfully',
+        file: {
+          id: save[0].id,
+          name: `${fileHash}.webp`,
+          url: `${s3PublicBase}/storage/images/${fileHash}.webp`,
+        },
+      })
     } catch (error: any) {
       console.error('File upload error:', error)
       return ctx.response.status(500).json({
-        error: 'An error occurred while uploading the file. Please try again later.',
+        error: error?.message || 'Terjadi kesalahan saat mengunggah file. Silakan coba lagi.',
         details: error?.message || String(error),
       })
     }
@@ -102,16 +129,34 @@ export default class FileManagersController {
 
   public async uploadMany(ctx: HttpContext) {
     try {
-      const data = await ctx.request.validateUsing(vine.compile(uploadFilesValidator))
+      // 1. Support single file or array of files from 'files' or 'files[]' or 'file'
+      let filesToProcess: any[] = []
+      const filesArray = ctx.request.files('files')
+      const filesArrayBracket = ctx.request.files('files[]')
+      const singleFile = ctx.request.file('files') || ctx.request.file('file')
+
+      if (filesArray && filesArray.length > 0) {
+        filesToProcess = filesArray
+      } else if (filesArrayBracket && filesArrayBracket.length > 0) {
+        filesToProcess = filesArrayBracket
+      } else if (singleFile) {
+        filesToProcess = [singleFile]
+      }
+
+      if (filesToProcess.length === 0) {
+        return ctx.response.status(400).json({
+          error: 'Tidak ada file yang dipilih untuk diunggah.',
+        })
+      }
 
       const disk = drive.use('s3')
       const uploaded: { id: string; name: string; url: string }[] = []
       const errors: { name: string; error: string }[] = []
       const s3PublicBase = this.getS3PublicBase()
 
-      for (const file of data.files) {
-        if (file.type !== 'image' || !file.tmpPath) {
-          errors.push({ name: file.clientName, error: 'Unsupported file type' })
+      for (const file of filesToProcess) {
+        if (!file.tmpPath) {
+          errors.push({ name: file.clientName || 'unknown', error: 'File path not found' })
           continue
         }
 
@@ -119,7 +164,14 @@ export default class FileManagersController {
           const fileBuffer = await fs.readFile(file.tmpPath)
           const fileHash = crypto.createHash('sha256').update(fileBuffer).digest('hex')
           const filePath = `storage/images/${fileHash}.webp`
-          const exist = await disk.exists(filePath)
+
+          let exist = false
+          try {
+            exist = await disk.exists(filePath)
+          } catch (storageCheckErr: any) {
+            console.error('[FileManager] Storage check failed:', storageCheckErr)
+            throw new Error(`MinIO/S3 tidak dapat dihubungi: ${storageCheckErr.message}`)
+          }
 
           if (exist) {
             const existing = await db.query.fileManager.findFirst({
@@ -135,19 +187,29 @@ export default class FileManagersController {
             }
           }
 
-          const convertedImage = await sharp(file.tmpPath).toFormat('webp').toBuffer()
+          let convertedImage: Buffer
+          try {
+            convertedImage = await sharp(file.tmpPath).toFormat('webp').toBuffer()
+          } catch {
+            convertedImage = fileBuffer
+          }
 
-          await disk.put(filePath, convertedImage, {
-            visibility: 'public',
-          })
+          try {
+            await disk.put(filePath, convertedImage, {
+              visibility: 'public',
+            })
+          } catch (putErr: any) {
+            console.error('[FileManager] MinIO put failed:', putErr)
+            throw new Error(`Gagal menyimpan file ke MinIO: ${putErr.message}`)
+          }
 
-          const fileSize = await disk.getBytes(filePath)
+          const fileSize = convertedImage.byteLength
           const save = await db
             .insert(tb.fileManager)
             .values({
               name: `${fileHash}.webp`,
               url: `/storage/images/${fileHash}.webp`,
-              size: fileSize.byteLength,
+              size: fileSize,
               mime_type: 'image/webp',
             })
             .returning()
@@ -163,6 +225,13 @@ export default class FileManagersController {
         }
       }
 
+      if (uploaded.length === 0 && errors.length > 0) {
+        return ctx.response.status(400).json({
+          error: errors[0].error || 'Gagal mengunggah file.',
+          errors,
+        })
+      }
+
       return ctx.response.json({
         message: 'Files uploaded',
         files: uploaded,
@@ -171,7 +240,7 @@ export default class FileManagersController {
     } catch (error: any) {
       console.error('File upload error:', error)
       return ctx.response.status(500).json({
-        error: 'An error occurred while uploading the files. Please try again later.',
+        error: error?.message || 'Terjadi kesalahan saat mengunggah file. Silakan coba lagi.',
         details: error?.message || String(error),
       })
     }

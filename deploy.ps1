@@ -69,6 +69,11 @@ switch ($Action.ToLower()) {
         docker compose run --rm --build migration pnpm --filter @umbreon/db db:seed
         Write-Host "[✔] Seeding data selesai!" -ForegroundColor Green
     }
+    "bucket" {
+        Write-Host "[*] Menginisialisasi bucket MinIO storage..." -ForegroundColor Cyan
+        docker compose run --rm createbuckets
+        Write-Host "[✔] MinIO bucket siap!" -ForegroundColor Green
+    }
     "status" {
         docker compose ps
     }
