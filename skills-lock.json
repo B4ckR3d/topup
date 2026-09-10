@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "adonisjs-docs-writer": {
+      "source": "adonisjs/v7-docs",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/adonisjs-docs-writer/SKILL.md",
+      "computedHash": "6eb8347926e8b0f6e14391d50214567fa2adeb5559cedffe65dc2d9d3cd6eec1"
+    },
+    "frontend-design": {
+      "source": "bytedance/deer-flow",
+      "sourceType": "github",
+      "skillPath": "skills/public/frontend-design/SKILL.md",
+      "computedHash": "8925cd22a5b6dba32095df9dee7b69fe2797bd0e0ba89d3fd8bdaee5543deffc"
+    },
+    "react-best-practices": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "6a2573cea01069776bcd23a4c3834e47c2ac5f15a6071df85edd2702ca576b57"
+    },
+    "web-design-guidelines": {
+      "source": "bytedance/deer-flow",
+      "sourceType": "github",
+      "skillPath": "skills/public/web-design-guidelines/SKILL.md",
+      "computedHash": "a6a44d5498f7e8f68289902f3dedfc6f38ae0cee1e96527c80724cf27f727c2a"
+    }
+  }
+}

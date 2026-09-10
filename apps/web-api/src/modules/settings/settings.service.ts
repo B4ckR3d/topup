@@ -1,0 +1,115 @@
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
+
+import bcrypt from 'bcrypt'
+import type { TUser } from 'src/common/types/meta.type'
+import { SendResponse } from 'src/common/utils/response'
+import { DatabaseService } from 'src/core/database/database.service'
+import { UsersRepository } from 'src/modules/users/users.repository'
+import { ChangeEmailDto } from './dto/change-email.dto'
+import { ChangePasswordDto } from './dto/change-password.dto'
+import { changePhoneNumberDto } from './dto/change-phone.dto'
+import { ChangeProfileDto } from './dto/change-profile.dto'
+
+@Injectable()
+export class SettingsService {
+  constructor(
+    readonly _databaseService: DatabaseService,
+    private readonly userRepository: UsersRepository,
+  ) {}
+
+  async changePassword(data: ChangePasswordDto, _user: TUser) {
+    const user = await this.userRepository.findUserById(_user.id)
+
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
+    const verifyOldPassword = await bcrypt.compare(data.old_password, user.password)
+
+    if (!verifyOldPassword) {
+      throw new BadRequestException('Old password is incorrect')
+    }
+
+    const hashedNewPassword = await bcrypt.hash(data.new_password, 10)
+
+    //  compare hashed new password with old password to prevent same password
+    const isSamePassword = await bcrypt.compare(data.new_password, user.password)
+    if (isSamePassword) {
+      throw new BadRequestException('New password cannot be the same as the old password')
+    }
+
+    await this.userRepository.updateUser({ password: hashedNewPassword }, _user.id)
+    return SendResponse.success({
+      message: 'Password changed successfully',
+    })
+  }
+
+  async changeProfile(data: ChangeProfileDto, _user: TUser) {
+    const user = await this.userRepository.findUserById(_user.id)
+
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
+    await this.userRepository.updateUser({ name: data.name }, _user.id)
+    return SendResponse.success({
+      message: 'Profile updated successfully',
+    })
+  }
+
+  async changePhoneNumber(data: changePhoneNumberDto, _user: TUser) {
+    const user = await this.userRepository.findUserById(_user.id)
+
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
+    const verifyPassword = await bcrypt.compare(data.password, user.password)
+    if (!verifyPassword) {
+      throw new BadRequestException('Invalid password')
+    }
+
+    const existingPhone = await this.userRepository.findPhoneNumber(data.new_phone)
+
+    if (existingPhone && existingPhone.id !== _user.id) {
+      throw new BadRequestException('Phone number already in use')
+    }
+
+    const isSamePhone = user.phone === data.new_phone
+    if (isSamePhone) {
+      throw new BadRequestException('New phone number cannot be the same as the old phone number')
+    }
+
+    await this.userRepository.updateUser({ phone: data.new_phone }, _user.id)
+    return SendResponse.success({
+      message: 'Phone number updated successfully',
+    })
+  }
+
+  async changeEmail(data: ChangeEmailDto, _user: TUser) {
+    const user = await this.userRepository.findUserById(_user.id)
+
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+
+    const verifyPassword = await bcrypt.compare(data.password, user.password)
+    if (!verifyPassword) {
+      throw new BadRequestException('Invalid password')
+    }
+
+    const existingEmail = await this.userRepository.findEmail(data.new_email)
+    if (existingEmail && existingEmail.id !== _user.id) {
+      throw new BadRequestException('Email already in use')
+    }
+
+    if (user.email === data.new_email) {
+      throw new BadRequestException('New email cannot be the same as the old email')
+    }
+
+    await this.userRepository.updateUser({ email: data.new_email }, _user.id)
+    return SendResponse.success({
+      message: 'Email updated successfully',
+    })
+  }
+}

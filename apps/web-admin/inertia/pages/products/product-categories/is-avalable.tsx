@@ -1,0 +1,44 @@
+import { router } from '@inertiajs/react'
+import { Switch } from '@umbreon/ui/components/ui/switch'
+import { useState } from 'react'
+import { LoaderIcon } from 'react-hot-toast'
+import type { UpdateProductCategoryValidator } from '#validators/product'
+
+export default function IsAvailable({
+  isAvailable,
+  id,
+  type,
+}: {
+  isAvailable: boolean
+  id: string
+  type: string
+}) {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleChange = async (v: boolean) => {
+    router.patch<UpdateProductCategoryValidator>(
+      `/admin/product-categories/${type}/${id}`,
+      {
+        is_available: v,
+      },
+      {
+        preserveScroll: true,
+        onStart: () => setIsLoading(true),
+        onFinish: () => setIsLoading(false),
+      },
+    )
+  }
+
+  if (isLoading) {
+    return <LoaderIcon className="animate-spin h-8 w-8 text-muted-foreground" />
+  }
+
+  return (
+    <Switch
+      id="is_available"
+      checked={isAvailable}
+      disabled={isLoading}
+      onCheckedChange={(v) => handleChange(v)}
+    />
+  )
+}

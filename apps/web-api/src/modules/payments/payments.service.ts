@@ -1,0 +1,266 @@
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  NotAcceptableException,
+  NotFoundException,
+} from '@nestjs/common'
+import { and, arrayContains, eq, gte, inArray, lte, ne, or } from '@umbreon/db'
+import {
+  PaymentMethodAllowAccess,
+  PaymentMethodProvider,
+  PaymentMethodType,
+  tb,
+  UserRole,
+} from '@umbreon/db/types'
+import type { TUser } from 'src/common/types/meta.type'
+import { SendResponse } from 'src/common/utils/response'
+import { DatabaseService } from 'src/core/database/database.service'
+import { StorageService } from 'src/core/storage/storage.service'
+import { calculatePaymentFee } from 'src/integrations/payment-gateway/payment-fee'
+import { ChangePinDto, PaymentAuthDto, ResetPinDto, SetPinDto } from './dto/pin.dto'
+import { PaymentAuthService } from './payment-auth.service'
+import { PaymentAuthType } from './payment-auth.type'
+import { PaymentsRepository } from './payments.repository'
+import { PinService } from './pin.service'
+
+@Injectable()
+export class PaymentsService {
+  constructor(
+    private readonly databaseService: DatabaseService,
+    private readonly storageService: StorageService,
+    private readonly paymentRepository: PaymentsRepository,
+    private readonly pinService: PinService,
+    private readonly paymentAuthService: PaymentAuthService,
+  ) {}
+
+  async getAllPayments() {
+    let payments = await this.databaseService.db.query.paymentMethods.findMany({
+      columns: {
+        id: true,
+        name: true,
+        fee_type: true,
+        type: true,
+        fee_static: true,
+        fee_percentage: true,
+        image_url: true,
+        is_need_email: true,
+        is_need_phone_number: true,
+        is_available: true,
+        is_featured: true,
+        label: true,
+        min_amount: true,
+        max_amount: true,
+        cut_off_start: true,
+        cut_off_end: true,
+      },
+    })
+
+    payments = payments.map((payment) => ({
+      ...payment,
+      image_url: this.storageService.getFileUrl(payment.image_url),
+    }))
+
+    return SendResponse.success<any>(payments)
+  }
+
+  async getPaymentCategoriers() {
+    let categories = await this.databaseService.db.query.paymentMethodCategories.findMany({
+      with: {
+        payment_methods: {
+          columns: {
+            id: true,
+            name: true,
+            fee_type: true,
+            type: true,
+            fee_static: true,
+            fee_percentage: true,
+            image_url: true,
+            is_need_email: true,
+            is_need_phone_number: true,
+            is_available: true,
+            is_featured: true,
+            label: true,
+            min_amount: true,
+            max_amount: true,
+            cut_off_start: true,
+            cut_off_end: true,
+          },
+        },
+      },
+    })
+
+    categories = categories.map((category) => ({
+      ...category,
+      payment_methods: category.payment_methods.map((payment) => ({
+        ...payment,
+        image_url: this.storageService.getFileUrl(payment.image_url),
+      })),
+    }))
+
+    return SendResponse.success<any>(categories)
+  }
+
+  async validatePaymentMethod(params: ValidatePaymentParams) {
+    const { payment_method_id, total_price, voucher, user, payment_phone_number } = params
+
+    const voucherPaymentMethod: string[] = []
+    if (voucher && !voucher.is_all_payment_methods) {
+      const methods = await this.databaseService.db
+        .select({
+          pay_id: tb.offerPaymentMethods.payment_method_id,
+        })
+        .from(tb.offerPaymentMethods)
+        .where(eq(tb.offerPaymentMethods.offer_id, voucher.id))
+
+      voucherPaymentMethod.push(...methods.map((m) => m.pay_id))
+    }
+
+    // Query payment method
+    const paymentMethod = await this.databaseService.db.query.paymentMethods.findFirst({
+      where: and(
+        eq(tb.paymentMethods.id, payment_method_id),
+        eq(tb.paymentMethods.is_available, true),
+        arrayContains(tb.paymentMethods.allow_access, [PaymentMethodAllowAccess.ORDER]),
+        lte(tb.paymentMethods.min_amount, total_price),
+        gte(tb.paymentMethods.max_amount, total_price),
+        ...(voucher && voucherPaymentMethod.length > 0
+          ? [inArray(tb.paymentMethods.id, voucherPaymentMethod)]
+          : []),
+        ...(!user
+          ? [
+              or(
+                ne(tb.paymentMethods.type, PaymentMethodType.BALANCE),
+                ne(tb.paymentMethods.provider_name, PaymentMethodProvider.BALANCE),
+              ),
+            ]
+          : []),
+      ),
+    })
+
+    if (!paymentMethod) {
+      throw new NotFoundException(
+        `Payment method with ID ${payment_method_id} not found or not available.`,
+      )
+    }
+
+    // Special case: balance payment
+    const isBalancePayment =
+      paymentMethod.type === PaymentMethodType.BALANCE ||
+      paymentMethod.provider_name === PaymentMethodProvider.BALANCE
+
+    if (isBalancePayment) {
+      if (!user) {
+        throw new NotAcceptableException(
+          'Payment method balance is only available for registered users.',
+        )
+      }
+
+      if (!user.pin_hash) {
+        throw new NotAcceptableException('Please set your PIN to use balance payment.')
+      }
+
+      if (user.pin_locked_until && user.pin_locked_until > new Date()) {
+        throw new NotAcceptableException('Your PIN is locked. Please reset or try again later.')
+      }
+
+      if (user.balance < total_price) {
+        throw new HttpException({ statusCode: 402, message: 'Insufficient balance.' }, 402)
+      }
+    }
+
+    if (paymentMethod.is_need_phone_number && !payment_phone_number) {
+      throw new BadRequestException('Payment phone number is required for this payment method.')
+    }
+
+    const fee = calculatePaymentFee(
+      total_price,
+      paymentMethod.fee_percentage / 100,
+      paymentMethod.fee_static,
+    )
+
+    return {
+      paymentMethod,
+      fee,
+    }
+  }
+
+  async getPaymentMethodBalance(user: TUser) {
+    if (user.role === UserRole.GUEST) {
+      return SendResponse.success(null, 'Please login to use balance payment method')
+    }
+
+    const getBalancePaymentMethod = await this.paymentRepository.findBalancePaymentMethod()
+    if (!getBalancePaymentMethod) {
+      throw new NotFoundException('Balance payment method not found')
+    }
+
+    const getUserBalance = await this.paymentRepository.getBalanceByUserId(user.id)
+
+    if (!getUserBalance) {
+      throw new NotFoundException('User balance not found')
+    }
+
+    return SendResponse.success({
+      id: getBalancePaymentMethod.id,
+      name: getBalancePaymentMethod.name,
+      type: getBalancePaymentMethod.type,
+      is_available: getBalancePaymentMethod.is_available,
+      image_url: this.storageService.getFileUrl(getBalancePaymentMethod.image_url),
+      user_balance: getUserBalance,
+      pin_required: true,
+      pin_is_set: !!user.pin_hash,
+      pin_locked_until: user.pin_locked_until ?? null,
+      pin_attempts_left:
+        user.pin_locked_until && user.pin_locked_until > new Date()
+          ? 0
+          : Math.max(0, this.pinService.maxAttempts - (user.pin_attempts ?? 0)),
+      pin_lock_minutes: this.pinService.lockMinutes,
+      supported_auth_methods: this.paymentAuthService.getSupportedMethods(),
+    })
+  }
+
+  async setPin(user: TUser, payload: SetPinDto) {
+    if (payload.pin !== payload.pin_confirm) {
+      throw new BadRequestException('PIN confirmation does not match.')
+    }
+
+    await this.pinService.setPin(user.id, payload.pin)
+    return SendResponse.success(null, 'PIN set successfully')
+  }
+
+  async changePin(user: TUser, payload: ChangePinDto) {
+    if (payload.new_pin !== payload.new_pin_confirm) {
+      throw new BadRequestException('New PIN confirmation does not match.')
+    }
+
+    await this.pinService.changePin(user.id, payload.current_pin, payload.new_pin)
+    return SendResponse.success(null, 'PIN changed successfully')
+  }
+
+  async resetPin(user: TUser, payload: ResetPinDto) {
+    if (payload.new_pin !== payload.new_pin_confirm) {
+      throw new BadRequestException('New PIN confirmation does not match.')
+    }
+
+    await this.pinService.setPin(user.id, payload.new_pin)
+    return SendResponse.success(null, 'PIN reset successfully')
+  }
+
+  async verifyPaymentAuth(user: TUser, payload: PaymentAuthDto) {
+    await this.paymentAuthService.verifyBalanceAuth({
+      userId: user.id,
+      authType: payload.payment_auth_type ?? PaymentAuthType.PIN,
+      pin: (payload as any).pin, // backward compatibility if provided
+      passkeyAssertion: payload.passkey_assertion,
+    })
+  }
+}
+
+interface ValidatePaymentParams {
+  payment_method_id: string
+  total_price: number
+  voucher?: any
+  user?: TUser
+  payment_phone_number?: string
+}

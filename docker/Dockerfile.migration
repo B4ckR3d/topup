@@ -1,0 +1,28 @@
+# ==========================================
+# Umbreon Database Migration Runner Dockerfile
+# ==========================================
+
+FROM node:24-alpine AS base
+RUN apk add --no-cache libc6-compat python3 make g++
+RUN corepack enable && corepack prepare pnpm@10.26.2 --activate
+
+WORKDIR /app
+
+# Copy root config files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json biome.json ./
+
+# Copy internal packages and apps configurations
+COPY packages/ ./packages/
+COPY apps/web-api/package.json ./apps/web-api/package.json
+COPY apps/web-admin/package.json ./apps/web-admin/package.json
+COPY apps/web-client/package.json ./apps/web-client/package.json
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Build internal packages
+RUN pnpm --filter @umbreon/configs build
+RUN pnpm --filter @umbreon/db build
+
+# Default command: push/sync database schema
+CMD ["pnpm", "--filter", "@umbreon/db", "db:push", "--force"]

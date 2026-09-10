@@ -1,0 +1,106 @@
+import type { InferPageProps } from '@adonisjs/inertia/types'
+import { router } from '@inertiajs/react'
+import type { ColumnDef } from '@tanstack/react-table'
+import { DataTable } from '@umbreon/ui/components/data-table'
+import { Button } from '@umbreon/ui/components/ui/button'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@umbreon/ui/components/ui/dialog'
+import type InputFieldsController from '#controllers/input_fields_controller'
+import AdminLayout from '~/components/layout/admin-layout'
+import { formatDate } from '~/utils/index'
+import CreateInputFieldsModal from './create-modal'
+
+type Props = InferPageProps<InputFieldsController, 'index'>
+
+const columns: ColumnDef<Props['inputFields'][number]>[] = [
+  {
+    accessorKey: 'id',
+    header: 'ID',
+  },
+  {
+    accessorKey: 'identifier',
+    header: 'Identifier',
+  },
+  {
+    accessorKey: 'type',
+    header: 'Type',
+  },
+  {
+    accessorKey: 'created_at',
+    header: 'Created At',
+    cell: ({ row }) => formatDate(row.getValue('created_at')),
+  },
+  {
+    accessorKey: 'updated_at',
+    header: 'Updated At',
+    cell: ({ row }) => formatDate(row.getValue('updated_at')),
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row }) => (
+      <div className="flex space-x-2">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="destructive" size="sm">
+              Delete
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Are you absolutely sure?</DialogTitle>
+              <DialogDescription>
+                This action cannot be undone. This will permanently delete your account and remove
+                your data from our servers.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  router.delete(`/admin/input-fields/${row.original.id}`, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                      router.get('/admin/input-fields')
+                    },
+                  })
+                }}
+              >
+                Yes, delete account
+              </Button>
+              <DialogClose asChild>
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    ),
+  },
+]
+
+export default function UserIndex(props: Props) {
+  const { inputFields } = props
+
+  return (
+    <AdminLayout>
+      <div className="flex justify-between mt-5 mb-2">
+        <h1 className="text-2xl font-bold">User Management</h1>
+      </div>
+
+      <div className="flex justify-end">
+        <CreateInputFieldsModal />
+      </div>
+
+      <DataTable columns={columns} data={inputFields} />
+    </AdminLayout>
+  )
+}

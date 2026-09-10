@@ -1,0 +1,10 @@
+{
+  "extends": "@umbreon/typescript-config/base.json",
+  "include": ["**/*.ts", "**/*.tsx", "tsconfig.build.json"],
+  "exclude": ["dist", "build", "node_modules"],
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}

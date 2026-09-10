@@ -1,0 +1,80 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Local env files
+.env*
+*.env*
+**/.env*
+**/*.env*
+
+# Testing
+coverage
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
+.next/
+out/
+build/
+dist/
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Misc
+.DS_Store
+*.pem
+Thumbs.db
+cred.md
+cred.env
+cred.*
+*cred*
+README.md
+readme.md
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# Biome
+.biome/
+
+# React Router
+.react-router/
+
+# Drizzle
+drizzle/meta
+
+# Logs
+logs
+*.log
+
+# Cache
+.cache
+*.tsbuildinfo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Session files
+.sisyphus/
+nul
+.adonisjs

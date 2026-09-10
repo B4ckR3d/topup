@@ -1,0 +1,12 @@
+{
+  "name": "@umbreon/typescript-config",
+  "version": "0.0.0",
+  "private": true,
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1"
+  }
+}

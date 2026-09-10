@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "default",
+  "rsc": true,
+  "tsx": true,
+  "tailwind": {
+    "config": "",
+    "css": "src/globals.css",
+    "baseColor": "zinc",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@umbreon/ui/components",
+    "ui": "@umbreon/ui/components/ui",
+    "utils": "@umbreon/ui/lib/utils",
+    "lib": "@umbreon/ui/lib",
+    "hooks": "@umbreon/ui/hooks"
+  }
+}

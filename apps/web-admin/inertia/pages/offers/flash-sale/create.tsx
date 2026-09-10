@@ -1,0 +1,228 @@
+import { useForm } from '@inertiajs/react'
+import { OfferType } from '@umbreon/db/types'
+import { Button } from '@umbreon/ui/components/ui/button'
+import { Input } from '@umbreon/ui/components/ui/input'
+import { Label } from '@umbreon/ui/components/ui/label'
+import { Textarea } from '@umbreon/ui/components/ui/textarea'
+import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
+import type { FormEvent } from 'react'
+import type { InsertOfferValidator } from '#validators/offer'
+import FileManager from '~/components/file-manager'
+import AdminLayout from '~/components/layout/admin-layout'
+
+dayjs.extend(utc)
+
+type Form = Omit<InsertOfferValidator, 'start_date' | 'end_date'> & {
+  start_date: string | Date
+  end_date: string | Date
+}
+
+export default function CreateOfferFlashSale() {
+  const { data, setData, errors, processing, post } = useForm<Form>({
+    name: '',
+    sub_name: '',
+    image_id: '',
+    description: '',
+    code: '',
+    quota: 0,
+    discount_static: 0,
+    discount_percentage: 0,
+    discount_maximum: 0,
+    start_date: dayjs().utc().toISOString(),
+    end_date: dayjs().utc().toISOString(),
+    is_available: false,
+    is_featured: false,
+    label: '',
+    is_all_users: true,
+    is_all_payment_methods: true,
+    is_all_products: false,
+    is_deleted: false,
+    is_need_redeem: false,
+    is_new_user: false,
+    min_amount: 0,
+    type: OfferType.FLASH_SALE,
+    usage_limit: 1,
+    is_allow_guest: false,
+    is_unlimited_date: false,
+    is_unlimited_quota: false,
+    is_combinable_with_voucher: false,
+  })
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    post('/admin/offers/create', {
+      preserveScroll: true,
+    })
+  }
+
+  return (
+    <AdminLayout>
+      <div className="">
+        <h1 className="text-2xl font-bold mb-6">Create Flash Sale</h1>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div>
+            <Label htmlFor="image_url">
+              Image <span className="text-red-500">*</span>
+            </Label>
+            <FileManager onFilesSelected={(f) => setData('image_id', f.id)} />
+            {errors.image_id && <p className="text-red-500 text-sm">{errors.image_id}</p>}
+          </div>
+          <div className="flex gap-4">
+            <div className="w-full">
+              <Label htmlFor="name">
+                Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="name"
+                value={data.name}
+                onChange={(e) => setData('name', e.target.value)}
+              />
+              {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="w-full">
+              <Label htmlFor="code">
+                Code <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="code"
+                value={data.code}
+                onChange={(e) => setData('code', e.target.value)}
+              />
+              {errors.code && <p className="text-red-500 text-sm">{errors.code}</p>}
+            </div>
+            <div className="w-full">
+              <Label htmlFor="quota">
+                Quota <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="quota"
+                type="number"
+                value={data.quota}
+                onChange={(e) => setData('quota', Number(e.target.value))}
+              />
+              {errors.quota && <p className="text-red-500 text-sm">{errors.quota}</p>}
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="w-full">
+              <Label htmlFor="discount_static">Discount Static</Label>
+              <Input
+                id="discount_static"
+                type="number"
+                value={data.discount_static}
+                onChange={(e) => setData('discount_static', Number(e.target.value))}
+              />
+              {errors.discount_static && (
+                <p className="text-red-500 text-sm">{errors.discount_static}</p>
+              )}
+            </div>
+            <div className="w-full">
+              <Label htmlFor="discount_percentage">Discount %</Label>
+              <Input
+                id="discount_percentage"
+                type="number"
+                value={data.discount_percentage}
+                onChange={(e) => setData('discount_percentage', Number(e.target.value))}
+                min={0}
+                max={100}
+              />
+              {errors.discount_percentage && (
+                <p className="text-red-500 text-sm">{errors.discount_percentage}</p>
+              )}
+            </div>
+            <div className="w-full">
+              <Label htmlFor="discount_maximum">Discount Maximum</Label>
+              <Input
+                id="discount_maximum"
+                type="number"
+                value={data.discount_maximum}
+                onChange={(e) => setData('discount_maximum', Number(e.target.value))}
+              />
+              {errors.discount_maximum && (
+                <p className="text-red-500 text-sm">{errors.discount_maximum}</p>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="w-full">
+              <Label htmlFor="end_date">
+                Start Date <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="start_date"
+                type="datetime-local"
+                value={
+                  typeof data.start_date === 'string'
+                    ? data.start_date
+                    : dayjs(data.start_date).format('YYYY-MM-DDTHH:mm')
+                }
+                onChange={(e) => setData('start_date', new Date(e.target.value))}
+              />
+              {errors.start_date && <p className="text-red-500 text-sm">{errors.start_date}</p>}
+            </div>
+            <div className="w-full">
+              <Label htmlFor="end_date">
+                End Date <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="end_date"
+                type="datetime-local"
+                value={
+                  typeof data.end_date === 'string'
+                    ? data.end_date
+                    : dayjs(data.end_date).format('YYYY-MM-DDTHH:mm')
+                }
+                onChange={(e) => setData('end_date', new Date(e.target.value))}
+              />
+              {errors.end_date && <p className="text-red-500 text-sm">{errors.end_date}</p>}
+            </div>
+          </div>
+          <div className="flex gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <input
+                id="is_available"
+                type="checkbox"
+                checked={data.is_available}
+                onChange={(e) => setData('is_available', e.target.checked)}
+                className="accent-primary h-5 w-5"
+              />
+              <Label htmlFor="is_available">Available</Label>
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="w-full">
+              <Label htmlFor="usage_limit">
+                Usage Per User <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="usage_limit"
+                type="number"
+                value={data.usage_limit}
+                onChange={(e) => setData('usage_limit', Number(e.target.value))}
+                min={1}
+              />
+              {errors.usage_limit && <p className="text-red-500 text-sm">{errors.usage_limit}</p>}
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="description">
+              Description <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="description"
+              value={data.description}
+              onChange={(e) => setData('description', e.target.value)}
+            />
+            {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
+          </div>
+          <Button type="submit" disabled={processing}>
+            {processing ? 'Creating...' : 'Create Offer'}
+          </Button>
+        </form>
+      </div>
+    </AdminLayout>
+  )
+}

@@ -1,0 +1,50 @@
+import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { ConfigService } from '@nestjs/config'
+import { PassportStrategy } from '@nestjs/passport'
+import { eq } from '@umbreon/db'
+import { tb, type UserRole } from '@umbreon/db/types'
+import type { Request } from 'express'
+import { ExtractJwt, Strategy } from 'passport-jwt'
+import { DatabaseService } from 'src/core/database/database.service'
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+  constructor(
+    readonly configService: ConfigService,
+    private readonly databaseService: DatabaseService,
+  ) {
+    const secret = configService.get<string>('JWT_SECRET')
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: secret,
+      passReqToCallback: true,
+    })
+  }
+
+  public async validate(req: Request): Promise<any> {
+    const accessToken = req.headers.authorization?.split(' ')[1]
+
+    if (!accessToken) {
+      throw new UnauthorizedException('Access token is missing')
+    }
+
+    const validateToken = await this.databaseService.db.query.sessions.findFirst({
+      where: eq(tb.sessions.access_token, accessToken),
+      with: {
+        user: true,
+      },
+    })
+
+    if (!validateToken) {
+      throw new UnauthorizedException('Invalid access token')
+    }
+
+    return validateToken.user
+  }
+}
+
+export type JwtPayload = {
+  id: string
+  role: typeof UserRole
+}

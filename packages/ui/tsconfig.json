@@ -1,0 +1,13 @@
+{
+  "extends": "@umbreon/typescript-config/react-library.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@ui/*": ["./src/*"],
+      "@umbreon/ui/*": ["./src/*"]
+    },
+    "types": ["react", "react-dom"]
+  },
+  "include": ["src"],
+  "exclude": ["node_modules"]
+}

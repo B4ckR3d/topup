@@ -1,0 +1,40 @@
+import { router } from '@inertiajs/react'
+import { Switch } from '@umbreon/ui/components/ui/switch'
+import { LoaderCircleIcon } from 'lucide-react'
+import { useState } from 'react'
+
+type Props = {
+  paymentMethodId: string
+  isAvailable: boolean
+}
+
+export default function IsAvailableSwicthPaymentMethods({ paymentMethodId, isAvailable }: Props) {
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSwitchChange = (checked: boolean) => {
+    router.patch(
+      `/admin/payments/methods/${paymentMethodId}`,
+      {
+        is_available: checked,
+      },
+      {
+        preserveScroll: true,
+        onSuccess: () => {
+          router.reload()
+        },
+        onStart: () => {
+          setIsLoading(true)
+        },
+        onFinish: () => {
+          setIsLoading(false)
+        },
+      },
+    )
+  }
+
+  if (isLoading) {
+    return <LoaderCircleIcon className="animate-spin duration-300" />
+  }
+
+  return <Switch checked={isAvailable} onCheckedChange={handleSwitchChange} />
+}

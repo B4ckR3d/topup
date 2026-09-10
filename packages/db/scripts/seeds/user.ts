@@ -1,0 +1,28 @@
+import bcrypt from 'bcrypt'
+import type { InferInsertModel } from 'drizzle-orm'
+import type { Database } from '@/database'
+import { UserRole } from '@/schema'
+import { tb } from '@/table'
+
+const user: InferInsertModel<typeof tb.users>[] = [
+  {
+    id: '91319975-2d4a-4704-9963-7d3d66506ae1',
+    email: 'admin@umbreon.store',
+    password: bcrypt.hashSync('B@gusok55', 10),
+    name: 'Umbreon Admin',
+    phone: '08123456789',
+    role: UserRole.ADMIN,
+  },
+  {
+    id: '00000000-0000-0000-0000-000000000001',
+    email: 'guest@umbreon.store',
+    password: bcrypt.hashSync('B@gusok55', 10),
+    name: 'Guest User',
+    phone: '08123123123',
+    role: UserRole.GUEST,
+  },
+]
+
+export const userSeed = async (db: Database) => {
+  await db.insert(tb.users).values(user).onConflictDoNothing()
+}
