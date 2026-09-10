@@ -26,6 +26,18 @@ import { OrdersService } from './services/orders.service'
 export class OrdersController {
   constructor(private readonly orderService: OrdersService) {}
 
+  @Get('check-nickname')
+  async checkNickname(
+    @Query('game') game: string,
+    @Query('user_id') userId: string,
+    @Query('zone_id') zoneId?: string,
+  ) {
+    if (!game || !userId) {
+      throw new BadRequestException('Parameter game dan user_id wajib diisi')
+    }
+    return await this.orderService.checkNickname(game, userId, zoneId)
+  }
+
   @UseGuards(TransactionGuard)
   @Get('get-product-price/:productId')
   getPriceBy(@Param('productId', ParseUUIDPipe) productId: string, @User() user: TUser) {

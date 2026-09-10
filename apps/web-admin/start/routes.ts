@@ -331,8 +331,18 @@ router
   .group(() => {
     router.get('/digiflazz/products', [ProvidersController, 'digiflazzProducts'])
     router.get('/digiflazz/saldo', [ProvidersController, 'digiflazzSaldo'])
+    router.get('/vipreseller/products', [ProvidersController, 'vipResellerProducts'])
+    router.get('/vipreseller/saldo', [ProvidersController, 'vipResellerSaldo'])
   })
   .prefix('/admin/providers')
+  .middleware(middleware.role(UserRole.ADMIN))
+
+router
+  .group(() => {
+    router.get('/test-all', [ProvidersController, 'testAllGateways'])
+    router.get('/test/:gateway', [ProvidersController, 'testSingleGateway'])
+  })
+  .prefix('/admin/gateways')
   .middleware(middleware.role(UserRole.ADMIN))
 
 router

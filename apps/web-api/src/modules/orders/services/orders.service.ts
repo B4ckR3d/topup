@@ -25,6 +25,7 @@ import { SignatureUtils } from 'src/common/utils/signature'
 import { DatabaseService } from 'src/core/database/database.service'
 import { QueueService } from 'src/core/queue/queue.service'
 import type { DigiflazzCekTagihanResponse } from 'src/integrations/h2h/digiflazz/digiflazz.type'
+import { VipResellerService } from 'src/integrations/h2h/vipreseller/vip-reseller.service'
 import { calculatePaymentFee } from 'src/integrations/payment-gateway/payment-fee'
 import { PaymentGatewayService } from 'src/integrations/payment-gateway/payment-gateway.service'
 import { OffersRepository } from 'src/modules/offers/offers.repository'
@@ -50,6 +51,7 @@ export class OrdersService {
     private readonly inquiryService: InquiryService,
     private readonly orderRepository: OrdersRepository,
     private readonly productRepository: ProductRepository,
+    private readonly vipResellerService: VipResellerService,
   ) {}
 
   async getPricePerPaymentMethod(productId: string, _user: TUser) {
@@ -816,6 +818,31 @@ export class OrdersService {
     return {
       raw: Array.isArray(dataInputFields) ? dataInputFields : [],
       merged: inputValues.join(separator),
+    }
+  }
+
+  async checkNickname(game: string, userId: string, zoneId?: string) {
+    let gameCode = (game || '').toLowerCase().replace(/_/g, '-')
+    if (gameCode.includes('mobile-legends') || gameCode === 'mlbb') {
+      gameCode = 'mobile-legends'
+    } else if (gameCode.includes('free-fire') || gameCode === 'ff') {
+      gameCode = 'free-fire'
+    } else if (gameCode.includes('genshin')) {
+      gameCode = 'genshin-impact'
+    } else if (gameCode.includes('pubg')) {
+      gameCode = 'pubg-mobile'
+    } else if (gameCode.includes('honkai-star-rail') || gameCode === 'hsr') {
+      gameCode = 'honkai-star-rail'
+    } else if (gameCode.includes('zenless')) {
+      gameCode = 'zenless-zone-zero'
+    }
+
+    const res = await this.vipResellerService.checkGameNickname(gameCode, userId, zoneId)
+    return {
+      success: Boolean(res.result),
+      nickname: res.data || null,
+      country: res.country || null,
+      message: res.message || (res.result ? 'ID Game valid' : 'ID Game tidak ditemukan'),
     }
   }
 }

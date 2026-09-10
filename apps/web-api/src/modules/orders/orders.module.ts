@@ -3,6 +3,7 @@ import { AuthCommonModule } from 'src/common/auth/auth-common.module'
 import { DatabaseModule } from 'src/core/database/database.module'
 import { QueueModule } from 'src/core/queue/queue.module'
 import { DigiflazzModule } from 'src/integrations/h2h/digiflazz/digiflazz.module'
+import { VipResellerModule } from 'src/integrations/h2h/vipreseller/vip-reseller.module'
 import { BalanceModule } from 'src/integrations/payment-gateway/balance/balance.module'
 import { PaymentGatewayModule } from 'src/integrations/payment-gateway/payment-gateway.module'
 import { OffersModule } from 'src/modules/offers/offers.module'
@@ -25,6 +26,7 @@ import { RefundService } from './services/refund.service'
     OffersModule,
     PaymentsModule,
     DigiflazzModule,
+    VipResellerModule,
     ProductsModule,
     BalanceModule,
   ],

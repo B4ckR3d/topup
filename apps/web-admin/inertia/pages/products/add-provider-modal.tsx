@@ -86,14 +86,19 @@ export default function AddProviderProductsModal({
   const [pageSize, setPageSize] = useState(50)
 
   const providerProducts = useQuery<{ data: DigiflazzProductPrepaid[] }>({
-    queryKey: ['digiflazz-products', provider],
-    queryFn: async () =>
-      apiClient
-        .get('/admin/providers/digiflazz/products', {
-          params: { billingType: 'prepaid' },
+    queryKey: ['provider-products', provider],
+    queryFn: async () => {
+      const endpoint =
+        provider === ProductProvider.VIPRESELLER
+          ? '/admin/providers/vipreseller/products'
+          : '/admin/providers/digiflazz/products'
+      return apiClient
+        .get(endpoint, {
+          params: { billingType: 'prepaid', serviceType: 'all' },
         })
-        .then((res) => res.data),
-    enabled: open && provider === ProductProvider.DIGIFLAZZ,
+        .then((res) => res.data)
+    },
+    enabled: open,
     retry: 1,
   })
 
@@ -208,7 +213,7 @@ export default function AddProviderProductsModal({
           profit_percentage: profitPercentage,
           stock: stockValue,
           provider_code: item.buyer_sku_code,
-          provider_name: ProductProvider.DIGIFLAZZ,
+          provider_name: provider,
           provider_price: item.price,
           provider_max_price: providerMaxPrice,
           provider_input_separator: '',
@@ -281,6 +286,7 @@ export default function AddProviderProductsModal({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={ProductProvider.DIGIFLAZZ}>Digiflazz</SelectItem>
+                      <SelectItem value={ProductProvider.VIPRESELLER}>VIP-Reseller</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

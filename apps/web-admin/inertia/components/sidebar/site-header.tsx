@@ -5,6 +5,7 @@ import { Button } from '@umbreon/ui/components/ui/button'
 import { useSidebar } from '@umbreon/ui/components/ui/sidebar'
 import { Dot, PanelLeft } from 'lucide-react'
 import { DigiflazzStatusButton } from './digiflazz-status-button'
+import { GatewayStatusDialog } from './gateway-status-dialog'
 import { SearchForm } from './search-form'
 
 export function SiteHeader() {
@@ -43,6 +44,7 @@ export function SiteHeader() {
             <span className="truncate capitalize">{toTitleCase(sectionName)}</span>
           </div>
         </div>
+        <GatewayStatusDialog />
         <DigiflazzStatusButton />
         <SearchForm className="hidden lg:block lg:w-[260px]" />
       </div>

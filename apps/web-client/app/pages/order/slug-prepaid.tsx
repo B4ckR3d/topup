@@ -5,16 +5,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@umbreon/ui/components
 import { cn } from '@umbreon/ui/lib/utils'
 import { useAtomValue } from 'jotai'
 import {
+  AlertCircleIcon,
+  CheckCircle2Icon,
   CheckIcon,
   ContactIcon,
+  Gamepad2Icon,
   KeyRoundIcon,
   LoaderCircleIcon,
   PackageIcon,
   ShieldCheckIcon,
+  SparklesIcon,
   TrendingDownIcon,
   ZapIcon,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import { useParams } from 'react-router'
 import BreadcrumbBasic from '~/components/breadcrumb-basic'
@@ -22,6 +26,7 @@ import { UnderlinedInput, UnderlinedSelect } from '~/components/form-fields'
 import Image from '~/components/image'
 import VoucherInput from '~/components/voucher-input'
 import { userAtom } from '~/store/user'
+import { apiClient } from '~/utils/axios'
 import { formatPrice } from '~/utils/format'
 import { useInquiry } from '../../hooks/use-inquiry'
 import CheckoutModal from './checkout-modal'
@@ -80,6 +85,140 @@ export default function OrderSlugPrepaidPage({
       form.setValue('product_id', selectedItem.id)
     }
   }, [selectedItem, form])
+
+  // Game & Nickname verification logic
+  const gameIdentifier = `${params.slug || ''} ${data?.name || ''}`.toLowerCase()
+  const gameCode = useMemo(() => {
+    if (gameIdentifier.includes('mobile-legends') || gameIdentifier.includes('mlbb'))
+      return 'mobile-legends'
+    if (gameIdentifier.includes('free-fire') || gameIdentifier.includes('ff')) return 'free-fire'
+    if (gameIdentifier.includes('genshin')) return 'genshin-impact'
+    if (gameIdentifier.includes('pubg')) return 'pubg-mobile'
+    if (gameIdentifier.includes('honkai') || gameIdentifier.includes('star-rail'))
+      return 'honkai-star-rail'
+    if (gameIdentifier.includes('zenless')) return 'zenless-zone-zero'
+    return null
+  }, [gameIdentifier])
+
+  const [nicknameState, setNicknameState] = useState<{
+    loading: boolean
+    nickname: string | null
+    country: string | null
+    error: string | null
+    checked: boolean
+  }>({
+    loading: false,
+    nickname: null,
+    country: null,
+    error: null,
+    checked: false,
+  })
+
+  const watchedInputFields = form.watch('input_fields')
+
+  // Identify target (User ID) and additional_target (Zone ID)
+  const { targetUserId, targetZoneId } = useMemo(() => {
+    if (!watchedInputFields || watchedInputFields.length === 0) {
+      return { targetUserId: '', targetZoneId: '' }
+    }
+
+    const zoneIdx = data.input_fields?.findIndex(
+      (f: any) => /zone|server/i.test(f.name) || /zone|server/i.test(f.title),
+    )
+    const userIdx = data.input_fields?.findIndex(
+      (f: any) =>
+        (/id|user|target|akun/i.test(f.name) || /id|user|target|akun/i.test(f.title)) &&
+        f !== data.input_fields?.[zoneIdx],
+    )
+
+    const rawUser = userIdx >= 0 ? watchedInputFields[userIdx]?.value : watchedInputFields[0]?.value
+    const rawZone =
+      zoneIdx >= 0
+        ? watchedInputFields[zoneIdx]?.value
+        : watchedInputFields.length > 1
+          ? watchedInputFields[1]?.value
+          : ''
+
+    return {
+      targetUserId: (rawUser || '').trim(),
+      targetZoneId: (rawZone || '').replace(/[()]/g, '').trim(),
+    }
+  }, [watchedInputFields, data.input_fields])
+
+  const checkGameNickname = useCallback(
+    async (manual = false) => {
+      if (!gameCode || !targetUserId) return
+      if (gameCode === 'mobile-legends' && !targetZoneId) return
+      if (targetUserId.length < 4) return
+
+      setNicknameState((prev) => ({ ...prev, loading: true, error: null }))
+      try {
+        const response = await apiClient.get('/order/check-nickname', {
+          params: {
+            game: gameCode,
+            userId: targetUserId,
+            zoneId: targetZoneId || undefined,
+          },
+        })
+
+        if (response.data?.success && response.data?.nickname) {
+          setNicknameState({
+            loading: false,
+            nickname: response.data.nickname,
+            country: response.data.country || null,
+            error: null,
+            checked: true,
+          })
+        } else {
+          setNicknameState({
+            loading: false,
+            nickname: null,
+            country: null,
+            error: response.data?.message || 'ID Game tidak ditemukan',
+            checked: true,
+          })
+        }
+      } catch (err: any) {
+        if (manual) {
+          setNicknameState({
+            loading: false,
+            nickname: null,
+            country: null,
+            error: err?.response?.data?.message || 'Gagal memeriksa nickname',
+            checked: true,
+          })
+        } else {
+          setNicknameState((prev) => ({ ...prev, loading: false }))
+        }
+      }
+    },
+    [gameCode, targetUserId, targetZoneId],
+  )
+
+  // Debounced auto-check
+  useEffect(() => {
+    if (!gameCode) return
+    if (!targetUserId || targetUserId.length < 4) {
+      setNicknameState({
+        loading: false,
+        nickname: null,
+        country: null,
+        error: null,
+        checked: false,
+      })
+      return
+    }
+
+    if (gameCode === 'mobile-legends' && (!targetZoneId || targetZoneId.length < 3)) {
+      return
+    }
+
+    const timer = setTimeout(() => {
+      checkGameNickname(false)
+    }, 700)
+
+    return () => clearTimeout(timer)
+  }, [gameCode, targetUserId, targetZoneId, checkGameNickname])
 
   const onSubmit = handleInquiry
 
@@ -182,6 +321,78 @@ export default function OrderSlugPrepaidPage({
                   )
                 })}
               </div>
+
+              {/* Game Nickname Checker Result / Action */}
+              {gameCode && (
+                <div className="mt-4 pt-3 border-t border-border/40">
+                  <div className="flex items-center justify-between gap-3 mb-2">
+                    <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                      <Gamepad2Icon className="w-4 h-4 text-primary" />
+                      Validasi Nickname {data.name}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={
+                        nicknameState.loading ||
+                        !targetUserId ||
+                        (gameCode === 'mobile-legends' && !targetZoneId)
+                      }
+                      onClick={() => checkGameNickname(true)}
+                      className="text-xs font-medium text-primary hover:text-primary/80 disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1 transition-colors"
+                    >
+                      {nicknameState.loading ? (
+                        <>
+                          <LoaderCircleIcon className="w-3.5 h-3.5 animate-spin" />
+                          Memeriksa...
+                        </>
+                      ) : (
+                        <>
+                          <SparklesIcon className="w-3.5 h-3.5" />
+                          Cek Nickname
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {nicknameState.loading && (
+                    <div className="flex items-center gap-2.5 p-3 rounded-lg bg-primary/5 border border-primary/20 text-xs text-primary animate-pulse">
+                      <LoaderCircleIcon className="w-4 h-4 animate-spin shrink-0" />
+                      <span>Memeriksa User ID ke server game...</span>
+                    </div>
+                  )}
+
+                  {!nicknameState.loading && nicknameState.nickname && (
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                      <div className="flex items-center gap-2.5">
+                        <CheckCircle2Icon className="w-5 h-5 text-emerald-500 shrink-0" />
+                        <div>
+                          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            Username / Nickname
+                          </div>
+                          <div className="text-sm font-bold text-foreground">
+                            {nicknameState.nickname}
+                          </div>
+                        </div>
+                      </div>
+                      {nicknameState.country && (
+                        <Badge
+                          variant="outline"
+                          className="text-xs border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                        >
+                          {nicknameState.country}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+
+                  {!nicknameState.loading && nicknameState.error && nicknameState.checked && (
+                    <div className="flex items-center gap-2.5 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-xs text-destructive">
+                      <AlertCircleIcon className="w-4 h-4 shrink-0" />
+                      <span>{nicknameState.error}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="mt-8 pt-4 border-t border-border/50 flex justify-between items-center">
                 <p className="text-xs text-muted-foreground">Butuh bantuan?</p>
