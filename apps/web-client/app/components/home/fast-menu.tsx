@@ -31,10 +31,9 @@ export default function FastMenu() {
     queryFn: () =>
       apiClient
         .get<FastMenuResponse>('/home/fast-menus')
-        .then((res) => res.data.data)
-        .catch(() => {
-          throw new Error('Failed to fetch fast menus')
-        }),
+        .then((res) => res.data.data || [])
+        .catch(() => []),
+    retry: 1,
   })
 
   const isMobile = useMemo(() => width < 768, [width])

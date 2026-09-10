@@ -1,6 +1,7 @@
 import { index, prefix, type RouteConfig, route } from '@react-router/dev/routes'
 
 export default [
+  route('storage/images/:fileName', 'api/storage-images.ts'),
   route(':locale', 'pages/locale.tsx', [
     index('pages/index.tsx'),
 

@@ -13,10 +13,9 @@ export default function HomeProductSections() {
     queryFn: () =>
       apiClient
         .get<ProductSectionsResponse>('/home/product-sections')
-        .then((res) => res.data.data)
-        .catch(() => {
-          throw new Error('Failed to fetch product sections')
-        }),
+        .then((res) => res.data.data || [])
+        .catch(() => []),
+    retry: 1,
   })
 
   if (productSections.isLoading) {

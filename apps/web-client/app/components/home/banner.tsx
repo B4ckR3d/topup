@@ -80,6 +80,28 @@ export default function HomeBanner({ home_top, home_middle, home_bottom }: Props
   const topHasMany = (home_top?.length ?? 0) > 1
   const middleHasMany = (home_middle?.length ?? 0) > 1
   const bottomHasMany = (home_bottom?.length ?? 0) > 1
+  const hasSideBanners = (home_middle?.length ?? 0) > 0 || (home_bottom?.length ?? 0) > 0
+
+  if (!hasSideBanners) {
+    return (
+      <section className="w-full overflow-hidden my-2">
+        {home_top?.length ? (
+          topHasMany ? (
+            renderSwiper(home_top, { slides: 1, loop: home_top.length > 1 })
+          ) : (
+            <div className="w-full aspect-[21/9] md:aspect-[3/1] max-h-[320px] rounded-2xl overflow-hidden shadow-sm border border-border/40">
+              <Image
+                src={home_top[0].image_url}
+                alt={home_top[0].title}
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          )
+        ) : null}
+      </section>
+    )
+  }
 
   return (
     <section className="w-full overflow-hidden">

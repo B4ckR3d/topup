@@ -11,7 +11,22 @@ function resolveSrc(src: string, baseUrl?: string) {
   } else if (src.includes(':9000/')) {
     src = src.split(':9000')[1]
   }
-  if (/^https?:\/\//i.test(src)) return src
+
+  // Keep external CDN images (ldrescdn, contabostorage, etc.)
+  if (/^https?:\/\//i.test(src) && !src.includes('84.247.148.122') && !src.includes(':9000')) {
+    return src
+  }
+
+  // If it's a local storage path, serve it relative over the current HTTPS domain
+  if (src.startsWith('/storage/')) {
+    return src
+  }
+
+  // If it still contains /storage/images/, extract it to relative path
+  if (src.includes('/storage/images/')) {
+    const afterStorage = src.split('/storage/images/')[1]
+    return `/storage/images/${afterStorage}`
+  }
 
   const apiBase = import.meta.env.VITE_API_URL || ''
   const base =

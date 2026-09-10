@@ -1,5 +1,5 @@
 import { ProductBillingType } from '@umbreon/db/types'
-import { data } from 'react-router'
+import { data, Link } from 'react-router'
 import z from 'zod'
 import { apiClient } from '~/utils/axios'
 import type { Route } from './+types/slug'
@@ -117,10 +117,32 @@ export type LoaderData = {
 export default function OrderSlugPage({ loaderData }: Route.ComponentProps) {
   const { data } = loaderData
 
-  // Check for specific product types first
-  // if (data?.type === 'pln_postpaid') {
-  //   return <OrderSlugPlnPostpaidPage data={data} />
-  // }
+  if (!data) {
+    return (
+      <div className="md:max-w-4xl mx-auto py-20 px-4 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground mb-4">
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Produk Belum Tersedia</h2>
+        <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+          Kategori produk ini belum tersedia atau sedang disiapkan oleh admin toko.
+        </p>
+        <Link
+          to="/"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-sm shadow-sm hover:opacity-90 transition-opacity"
+        >
+          Kembali ke Beranda
+        </Link>
+      </div>
+    )
+  }
 
   // Then check billing type
   if (data.product_billing_type === ProductBillingType.POSTPAID) {
