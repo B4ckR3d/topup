@@ -70,7 +70,7 @@ case "$ACTION" in
         ;;
     migrate)
         echo -e "${CYAN}[*] Menjalankan migrasi database...${NC}"
-        docker compose run --rm migration
+        docker compose run --rm --build migration
         echo -e "${GREEN}[✔] Migrasi database selesai!${NC}"
         ;;
     status|ps)

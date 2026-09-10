@@ -61,7 +61,7 @@ switch ($Action.ToLower()) {
     }
     "migrate" {
         Write-Host "[*] Menjalankan migrasi database..." -ForegroundColor Cyan
-        docker compose run --rm migration
+        docker compose run --rm --build migration
         Write-Host "[✔] Migrasi database selesai!" -ForegroundColor Green
     }
     "status" {

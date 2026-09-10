@@ -39,7 +39,7 @@ Thumbs.db
 cred.md
 cred.env
 cred.*
-*cred*
+!packages/db/src/schema/passkey_credentials.ts
 README.md
 readme.md
 
