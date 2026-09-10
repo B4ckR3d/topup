@@ -18,7 +18,11 @@ const shieldConfig = defineConfig({
    */
   csrf: {
     enabled: true,
-    exceptRoutes: [],
+    exceptRoutes: [
+      '/admin/file-managers/upload',
+      '/admin/file-managers/upload-many',
+      '/admin/file-managers/delete-bulk',
+    ],
     enableXsrfCookie: true,
     methods: ['POST', 'PUT', 'PATCH', 'DELETE'],
     cookieOptions: {

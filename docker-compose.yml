@@ -123,6 +123,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       SESSION_DRIVER: ${SESSION_DRIVER:-cookie}
       SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+      APP_KEY: ${APP_KEY:-tiQkvkpez9kpzlviKrawKt261I_H1EOT}
       DRIVE_DISK: ${DRIVE_DISK:-s3}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-umbreon_minio}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-Umbr30n_M1n10_S3cur3_2026!}
@@ -225,8 +226,8 @@ services:
         echo 'Menunggu MinIO siap...';
         sleep 1;
       done;
-      mc mb myminio/umbreon --ignore-existing;
-      mc anonymous set public myminio/umbreon;
+      mc mb myminio/umbreon --ignore-existing || true;
+      mc anonymous set download myminio/umbreon || mc anonymous set public myminio/umbreon || true;
       echo 'Bucket umbreon siap!';
       exit 0;
       "

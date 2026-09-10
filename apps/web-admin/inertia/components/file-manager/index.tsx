@@ -125,11 +125,7 @@ export default function FileManager({
       })
 
       return apiClient
-        .post('/admin/file-managers/upload-many', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        })
+        .post('/admin/file-managers/upload-many', formData)
         .then((response) => {
           const uploadedCount = response.data?.files?.length ?? 0
           const errorCount = response.data?.errors?.length ?? 0
@@ -137,7 +133,8 @@ export default function FileManager({
             toast.success(`Uploaded ${uploadedCount} file(s)`)
           }
           if (errorCount > 0) {
-            toast.error(`Failed ${errorCount} file(s)`)
+            const firstErr = response.data?.errors?.[0]?.error
+            toast.error(firstErr ? `Failed: ${firstErr}` : `Failed ${errorCount} file(s)`)
           }
           if (uploadedCount === 0 && errorCount === 0) {
             toast.success('Files uploaded')
@@ -147,9 +144,15 @@ export default function FileManager({
           return response.data
         })
         .catch((error) => {
-          toast.error(error.response?.data?.error || 'File upload failed')
+          const errMsg =
+            error.response?.data?.error ||
+            error.response?.data?.details ||
+            error.response?.data?.message ||
+            error.message ||
+            'File upload failed'
+          toast.error(errMsg)
           console.error('File upload failed:', error)
-          throw new Error('File upload failed')
+          throw new Error(errMsg)
         })
     },
   })

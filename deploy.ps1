@@ -34,6 +34,8 @@ switch ($Action.ToLower()) {
     "up" {
         Write-Host "[+] Memulai build dan deploy semua container..." -ForegroundColor Green
         docker compose up -d --build
+        Write-Host "[*] Memastikan MinIO bucket 'umbreon' siap..." -ForegroundColor Cyan
+        docker compose run --rm createbuckets
         Write-Host "[✔] Semua layanan berhasil dijalankan!" -ForegroundColor Green
         docker compose ps
     }

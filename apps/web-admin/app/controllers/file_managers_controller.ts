@@ -129,7 +129,7 @@ export default class FileManagersController {
 
   public async uploadMany(ctx: HttpContext) {
     try {
-      // 1. Support single file or array of files from 'files' or 'files[]' or 'file'
+      // 1. Support single file or array of files from 'files' or 'files[]' or 'file' or allFiles
       let filesToProcess: any[] = []
       const filesArray = ctx.request.files('files')
       const filesArrayBracket = ctx.request.files('files[]')
@@ -141,22 +141,50 @@ export default class FileManagersController {
         filesToProcess = filesArrayBracket
       } else if (singleFile) {
         filesToProcess = [singleFile]
+      } else {
+        const allFiles = ctx.request.allFiles()
+        for (const key of Object.keys(allFiles)) {
+          const val = allFiles[key]
+          if (Array.isArray(val)) {
+            filesToProcess.push(...val)
+          } else if (val) {
+            filesToProcess.push(val)
+          }
+        }
       }
 
       if (filesToProcess.length === 0) {
         return ctx.response.status(400).json({
-          error: 'Tidak ada file yang dipilih untuk diunggah.',
+          error: 'Tidak ada file yang dipilih atau file tidak diterima oleh server.',
         })
       }
 
-      const disk = drive.use('s3')
+      let disk: any
+      try {
+        disk = drive.use('s3')
+      } catch (diskErr: any) {
+        console.error('[FileManager] Driver initialization error:', diskErr)
+        return ctx.response.status(500).json({
+          error: `Konfigurasi MinIO/S3 tidak valid: ${diskErr?.message || diskErr}`,
+        })
+      }
+
       const uploaded: { id: string; name: string; url: string }[] = []
       const errors: { name: string; error: string }[] = []
       const s3PublicBase = this.getS3PublicBase()
 
       for (const file of filesToProcess) {
         if (!file.tmpPath) {
-          errors.push({ name: file.clientName || 'unknown', error: 'File path not found' })
+          errors.push({
+            name: file.clientName || 'unknown',
+            error: 'File sementara tidak ditemukan di server',
+          })
+          continue
+        }
+
+        if (file.hasErrors) {
+          const errMsg = file.errors?.[0]?.message || 'File tidak valid'
+          errors.push({ name: file.clientName || 'unknown', error: errMsg })
           continue
         }
 
@@ -170,7 +198,7 @@ export default class FileManagersController {
             exist = await disk.exists(filePath)
           } catch (storageCheckErr: any) {
             console.error('[FileManager] Storage check failed:', storageCheckErr)
-            throw new Error(`MinIO/S3 tidak dapat dihubungi: ${storageCheckErr.message}`)
+            throw new Error(`Koneksi MinIO gagal: ${storageCheckErr.message || storageCheckErr}`)
           }
 
           if (exist) {

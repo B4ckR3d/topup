@@ -41,6 +41,8 @@ case "$ACTION" in
     up|start)
         echo -e "${GREEN}[+] Memulai build dan deploy semua container...${NC}"
         docker compose up -d --build
+        echo -e "${CYAN}[*] Memastikan MinIO bucket 'umbreon' siap...${NC}"
+        docker compose run --rm createbuckets || true
         echo -e "${GREEN}[✔] Semua layanan berhasil dijalankan!${NC}"
         docker compose ps
         ;;
