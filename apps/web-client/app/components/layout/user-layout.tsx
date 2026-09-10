@@ -9,9 +9,11 @@ import { themeAtom } from '~/store/theme'
 import { authTokenAtom } from '~/store/token'
 import { userAtom } from '~/store/user'
 import { generateDeviceIdSync } from '~/utils/device-id'
+import BottomNavMobile from '../bottom-nav.mobile'
 import FooterSection from '../footer'
 import Header from '../header'
 import Sidebar from '../sidebar'
+import TelegramCsButton from '../telegram-cs-button'
 
 export default function UserLayout({ children }: { children: React.ReactNode }) {
   useHydrateAtoms([[queryClientAtom, queryClient]])
@@ -42,8 +44,10 @@ export default function UserLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <main className="flex-1 p-4">{children}</main>
+      <main className="flex-1 p-4 pb-28 md:pb-6">{children}</main>
       <Sidebar />
+      <TelegramCsButton />
+      <BottomNavMobile />
       <Toaster position="top-right" reverseOrder={false} />
       <FooterSection />
     </div>

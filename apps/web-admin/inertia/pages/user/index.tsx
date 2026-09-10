@@ -70,6 +70,24 @@ const columns: ColumnDef<Props['users'][number]>[] = [
     header: 'Email Verified',
   },
   {
+    accessorKey: 'two_factor_enabled',
+    header: '2FA',
+    cell: ({ row }) => {
+      const is2Fa = !!(row.original as any).two_factor_enabled
+      return (
+        <span
+          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+            is2Fa
+              ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+              : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+          }`}
+        >
+          {is2Fa ? 'Aktif' : 'Nonaktif'}
+        </span>
+      )
+    },
+  },
+  {
     accessorKey: 'is_deleted',
     header: 'Deleted',
   },

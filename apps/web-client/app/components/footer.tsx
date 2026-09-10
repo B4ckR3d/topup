@@ -1,23 +1,29 @@
+import { useAtomValue } from 'jotai'
 import { Link } from 'react-router'
+import { appConfigAtom } from '~/store/app-config'
 
 export default function FooterSection() {
+  const appConfig = useAtomValue(appConfigAtom)
+  const appName =
+    appConfig.appName && appConfig.appName !== 'Umbreon Store' ? appConfig.appName : 'Aldi Network'
+
   return (
     <footer className="bg-secondary mt-16 p-4">
       <div className="w-full md:max-w-7xl  mx-auto">
         <div className="w-full flex flex-col md:flex-row gap-8 md:gap-4">
           <div className="flex-1/2 mb-8 md:mb-0">
             <h2 className="text-xl font-bold text-center md:text-start text-foreground">
-              Umbreon Store
+              {appName}
             </h2>
             <p className="text-sm mt-2 text-muted-foreground text-center md:text-start max-w-full lg:max-w-2/3">
-              Umbreon Store adalah platform top-up & pembayaran digital yang memudahkan pembelian
-              pulsa, paket data, game voucher, dan layanan digital lainnya secara cepat, aman, dan
+              {appName} adalah platform top-up & pembayaran digital yang memudahkan pembelian pulsa,
+              paket data, game voucher, dan layanan digital lainnya secara cepat, aman, dan
               transparan
             </p>
             <address className="not-italic mt-4 text-xs leading-relaxed text-muted-foreground text-center md:text-start max-w-full lg:max-w-2/3">
-              Jl. Raya Bandung Durenan, Desa Gandong, Kec. Bandung,
+              Desa Pandemulyo, Kec. Bulu,
               <br className="hidden md:block" />
-              Kab. Tulungagung, Jawa Timur, Kode Pos 66274
+              Kab. Temanggung, Jawa Tengah, Kode Pos 56253
             </address>
 
             <h2 className="font-semibold mt-8 text-center md:text-start text-foreground">
@@ -138,7 +144,7 @@ export default function FooterSection() {
         </div>
 
         <div className="text-sm text-muted-foreground mt-10 text-center md:text-left">
-          &copy; {new Date().getFullYear()} Umbreon Store. All rights reserved.
+          &copy; {new Date().getFullYear()} {appName}. All rights reserved.
         </div>
       </div>
     </footer>

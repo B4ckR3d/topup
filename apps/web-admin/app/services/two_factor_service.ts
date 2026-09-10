@@ -1,4 +1,4 @@
-import { createHmac } from 'node:crypto'
+import { createHmac, randomBytes } from 'node:crypto'
 import { compare } from 'bcrypt-ts'
 
 /**
@@ -137,6 +137,94 @@ export class TwoFactorService {
     }
 
     return false
+  }
+
+  /**
+   * Generates a cryptographically random Base32 secret for a user
+   */
+  public static generateUserSecret(length = 32): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
+    const randomBytesBuffer = randomBytes(length)
+    let secret = ''
+    for (let i = 0; i < length; i++) {
+      secret += chars[randomBytesBuffer[i] % chars.length]
+    }
+    return secret
+  }
+
+  /**
+   * Generates formatted backup recovery codes (e.g., 5 codes of format XXXX-XXXX)
+   */
+  public static generateRecoveryCodes(count = 6): string[] {
+    const codes: string[] = []
+    for (let i = 0; i < count; i++) {
+      const part1 = randomBytes(2).toString('hex').toUpperCase()
+      const part2 = randomBytes(2).toString('hex').toUpperCase()
+      codes.push(`${part1}-${part2}`)
+    }
+    return codes
+  }
+
+  /**
+   * Verifies a code against a specific user's database records:
+   * 1. Check user's individual TOTP secret
+   * 2. Check user's recovery codes (and identify if one was matched)
+   * 3. Check user's PIN hash
+   * 4. Check master emergency backup code (123456)
+   */
+  public static async verifyUserCode(
+    code: string,
+    user: {
+      two_factor_secret?: string | null
+      two_factor_recovery_codes?: string | null
+      pin_hash?: string | null
+    },
+  ): Promise<{ valid: boolean; usedRecoveryCode?: string }> {
+    const cleanCode = code.trim().toUpperCase()
+    if (!cleanCode) return { valid: false }
+
+    // 1. Verify against user's specific TOTP secret
+    if (user.two_factor_secret && /^\d{6}$/.test(cleanCode)) {
+      if (TwoFactorService.verifyTotp(cleanCode, user.two_factor_secret)) {
+        return { valid: true }
+      }
+    }
+
+    // 2. Verify against single-use recovery codes
+    if (user.two_factor_recovery_codes) {
+      try {
+        const storedCodes: string[] = JSON.parse(user.two_factor_recovery_codes)
+        const matchingCode = storedCodes.find((c) => c.toUpperCase() === cleanCode)
+        if (matchingCode) {
+          return { valid: true, usedRecoveryCode: matchingCode }
+        }
+      } catch {
+        // if comma separated
+        const storedCodes = user.two_factor_recovery_codes.split(',').map((c) => c.trim())
+        const matchingCode = storedCodes.find((c) => c.toUpperCase() === cleanCode)
+        if (matchingCode) {
+          return { valid: true, usedRecoveryCode: matchingCode }
+        }
+      }
+    }
+
+    // 3. Verify against user PIN
+    if (user.pin_hash) {
+      try {
+        const isPinValid = await compare(code.trim(), user.pin_hash)
+        if (isPinValid) return { valid: true }
+      } catch {
+        // ignore
+      }
+    }
+
+    // 4. Fallback master backup code (emergency access)
+    const masterBackup = TwoFactorService.getBackupCode()
+    if (masterBackup && code.trim() === masterBackup) {
+      return { valid: true }
+    }
+
+    return { valid: false }
   }
 
   /**

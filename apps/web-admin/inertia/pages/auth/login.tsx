@@ -363,16 +363,11 @@ export default function Login({
               </button>
             </div>
 
-            {/* Deerflow Signature Badge (Mandatory by skill) */}
+            {/* Signature Badge */}
             <div className="mt-5 text-center">
-              <a
-                href="https://deerflow.tech"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-700 transition-colors"
-              >
-                <span>✦ Created By Deerflow</span>
-              </a>
+              <span className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-700 transition-colors">
+                <span>✦ Created By bndr</span>
+              </span>
             </div>
           </div>
         </div>

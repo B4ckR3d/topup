@@ -175,6 +175,42 @@ export interface Registry {
       errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/users_controller').default['deductBalance']>>> | { status: 422; response: { errors: SimpleError[] } }
     }
   }
+  'users.generate2Fa': {
+    methods: ["POST"]
+    pattern: '/admin/users/:id/2fa/generate'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/users_controller').default['generate2Fa']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/users_controller').default['generate2Fa']>>>
+    }
+  }
+  'users.enable2Fa': {
+    methods: ["POST"]
+    pattern: '/admin/users/:id/2fa/enable'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/users_controller').default['enable2Fa']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/users_controller').default['enable2Fa']>>>
+    }
+  }
+  'users.disable2Fa': {
+    methods: ["POST"]
+    pattern: '/admin/users/:id/2fa/disable'
+    types: {
+      body: {}
+      paramsTuple: [ParamValue]
+      params: { id: ParamValue }
+      query: {}
+      response: ExtractResponse<Awaited<ReturnType<import('#controllers/users_controller').default['disable2Fa']>>>
+      errorResponse: ExtractErrorResponse<Awaited<ReturnType<import('#controllers/users_controller').default['disable2Fa']>>>
+    }
+  }
   'productCategories.index': {
     methods: ["GET","HEAD"]
     pattern: '/admin/product-categories'

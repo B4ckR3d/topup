@@ -1,4 +1,5 @@
 import { cn } from '@umbreon/ui/lib/utils'
+import { useSetAtom } from 'jotai'
 import { useEffect } from 'react'
 import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
@@ -16,7 +17,9 @@ import type { Route } from './+types/root'
 import './app.css'
 import { RouterTopLoader } from './components/top-loader'
 import { getInstance, i18nextMiddleware, localeCookie } from './middlewares/i8n'
+import { getPublicAppConfig } from './services/app-config.server'
 import { getSession } from './session.server'
+import { appConfigAtom } from './store/app-config'
 
 export const middleware = [i18nextMiddleware]
 
@@ -54,12 +57,16 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const flashSuccess = session.get('success')
   const flashError = session.get('error')
 
+  // Load public app config (with 15s caching)
+  const appConfig = await getPublicAppConfig()
+
   // jika sudah match, set locale sesuai param
   await i18next.changeLanguage(localeParam)
 
   return data(
     {
       locale: localeParam,
+      appConfig,
       flash: {
         success: flashSuccess,
         error: flashError,
@@ -107,6 +114,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App({ loaderData }: Route.ComponentProps) {
   // useChangeLanguage(loaderData.locale)
+  const setAppConfig = useSetAtom(appConfigAtom)
+
+  useEffect(() => {
+    if (loaderData?.appConfig) {
+      setAppConfig(loaderData.appConfig)
+    }
+  }, [loaderData?.appConfig, setAppConfig])
 
   useEffect(() => {
     if (loaderData?.flash.success) {

@@ -18,6 +18,9 @@ export type ScannedRoutes = {
     'users.update': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'users.addBalance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'users.deductBalance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'users.generate2Fa': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'users.enable2Fa': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'users.disable2Fa': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'productCategories.index': { paramsTuple?: []; params?: {} }
     'productCategories.indexGames': { paramsTuple?: []; params?: {} }
     'productCategories.createGame': { paramsTuple?: []; params?: {} }
@@ -373,6 +376,9 @@ export type ScannedRoutes = {
     'users.store': { paramsTuple?: []; params?: {} }
     'users.addBalance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'users.deductBalance': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'users.generate2Fa': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'users.enable2Fa': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
+    'users.disable2Fa': { paramsTuple: [ParamValue]; params: {'id': ParamValue} }
     'productCategories.postCreate': { paramsTuple: [ParamValue]; params: {'type': ParamValue} }
     'fileManagers.upload': { paramsTuple?: []; params?: {} }
     'fileManagers.uploadMany': { paramsTuple?: []; params?: {} }

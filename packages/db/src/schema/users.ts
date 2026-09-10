@@ -27,6 +27,11 @@ export const users = pgTable('users', {
   pin_locked_until: timestamp('pin_locked_until', { withTimezone: true }),
   pin_set_at: timestamp('pin_set_at', { withTimezone: true }),
 
+  two_factor_secret: varchar('two_factor_secret', { length: 255 }),
+  two_factor_enabled: boolean('two_factor_enabled').notNull().default(false),
+  two_factor_recovery_codes: varchar('two_factor_recovery_codes', { length: 1000 }),
+  two_factor_confirmed_at: timestamp('two_factor_confirmed_at', { withTimezone: true }),
+
   is_banned: boolean('is_banned').notNull().default(false),
   is_email_verified: boolean('is_email_verified').notNull().default(false),
   is_deleted: boolean('is_deleted').notNull().default(false),

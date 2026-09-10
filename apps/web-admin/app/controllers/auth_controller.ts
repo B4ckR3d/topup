@@ -124,7 +124,15 @@ export default class AuthController {
     )
   }
 
-  public async register({ inertia }: HttpContext) {
+  public async register({ inertia, response, session }: HttpContext) {
+    const isRegistrationEnabled = process.env.ADMIN_REGISTRATION_ENABLED === 'true'
+    if (!isRegistrationEnabled) {
+      session.flashErrors({
+        error: 'Pendaftaran admin saat ini dinonaktifkan. Silakan hubungi Superadmin.',
+      })
+      return response.redirect('/auth/login')
+    }
+
     return inertia.render('auth/register', {
       title: 'Register',
       description: 'Create a new account to access the admin panel.',
@@ -132,6 +140,14 @@ export default class AuthController {
   }
 
   public async postRegister(ctx: HttpContext) {
+    const isRegistrationEnabled = process.env.ADMIN_REGISTRATION_ENABLED === 'true'
+    if (!isRegistrationEnabled) {
+      ctx.session.flashErrors({
+        error: 'Pendaftaran admin saat ini dinonaktifkan. Silakan hubungi Superadmin.',
+      })
+      return ctx.response.redirect('/auth/login')
+    }
+
     const data = await ctx.request.validateUsing(vine.compile(registerValidator))
 
     const user = await db.query.users.findFirst({
@@ -211,29 +227,50 @@ export default class AuthController {
         return ctx.response.redirect().back()
       }
 
-      // Check Two-Factor Authentication (TOTP / Authenticator / Backup PIN)
+      // Check Two-Factor Authentication per User
       const twoFactorCode = data.two_factor_code?.trim()
-      const isTwoFactorRequired = TwoFactorService.isRequired()
+      const isUser2FaEnabled = !!user.two_factor_enabled
+      const isGlobal2FaRequired = TwoFactorService.isRequired()
 
-      if (twoFactorCode || isTwoFactorRequired) {
-        if (!twoFactorCode) {
+      if (isUser2FaEnabled || isGlobal2FaRequired || twoFactorCode) {
+        if (!twoFactorCode && (isUser2FaEnabled || isGlobal2FaRequired)) {
           ctx.session.flashErrors({
-            error: 'Kode Authenticator / 2FA wajib diisi.',
+            error: 'Akun Anda mengaktifkan 2FA. Silakan masukkan kode Authenticator 6-digit.',
             two_factor_code: 'Kode Authenticator / 2FA wajib diisi.',
           })
           return ctx.response.redirect().back()
         }
 
-        const is2FaValid = await TwoFactorService.verifyCode(twoFactorCode, {
-          userPinHash: user.pin_hash,
-        })
-
-        if (!is2FaValid) {
-          ctx.session.flashErrors({
-            error: 'Kode Authenticator / 2FA tidak valid atau sudah kadaluarsa.',
-            two_factor_code: 'Kode Authenticator / 2FA tidak valid atau sudah kadaluarsa.',
+        if (twoFactorCode) {
+          const verification = await TwoFactorService.verifyUserCode(twoFactorCode, {
+            two_factor_secret: user.two_factor_secret,
+            two_factor_recovery_codes: user.two_factor_recovery_codes,
+            pin_hash: user.pin_hash,
           })
-          return ctx.response.redirect().back()
+
+          if (!verification.valid) {
+            ctx.session.flashErrors({
+              error: 'Kode Authenticator / 2FA tidak valid atau sudah kadaluarsa.',
+              two_factor_code: 'Kode Authenticator / 2FA tidak valid atau sudah kadaluarsa.',
+            })
+            return ctx.response.redirect().back()
+          }
+
+          // If a recovery code was used, remove it from the remaining codes
+          if (verification.usedRecoveryCode && user.two_factor_recovery_codes) {
+            try {
+              const storedCodes: string[] = JSON.parse(user.two_factor_recovery_codes)
+              const updated = storedCodes.filter(
+                (c) => c.toUpperCase() !== verification.usedRecoveryCode!.toUpperCase(),
+              )
+              await db
+                .update(tb.users)
+                .set({ two_factor_recovery_codes: JSON.stringify(updated) })
+                .where(eq(tb.users.id, user.id))
+            } catch {
+              // ignore
+            }
+          }
         }
       }
 

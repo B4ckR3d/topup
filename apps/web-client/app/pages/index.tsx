@@ -1,9 +1,9 @@
 import { Suspense, useId } from 'react'
 import { Await, Link, redirect, useLoaderData } from 'react-router'
-import BottomNavMobile from '~/components/bottom-nav.mobile'
 import HomeBanner from '~/components/home/banner'
 import FastMenu from '~/components/home/fast-menu'
 import HomeProductSections from '~/components/home/product-sections'
+import QuickCategoryDock from '~/components/home/quick-category-dock'
 import Image from '~/components/image'
 import { apiClient } from '~/utils/axios'
 import type { Route } from './+types'
@@ -18,8 +18,14 @@ export async function loader(_args: Route.LoaderArgs) {
       data: response.data?.data,
       banners: banners,
     }
-  } catch (_) {
-    return redirect('/error')
+  } catch (err: any) {
+    console.error('[Index Loader Error]:', err?.message || err)
+    return {
+      data: [],
+      banners: Promise.resolve({
+        data: { data: { home_top: [], home_middle: [], home_bottom: [] } },
+      }),
+    }
   }
 }
 
@@ -40,6 +46,7 @@ export default function Index(_args: Route.ComponentProps) {
           )}
         </Await>
       </Suspense>
+      <QuickCategoryDock />
       <FastMenu />
       <HomeProductSections />
       {data?.map((category: any) => (
@@ -90,8 +97,6 @@ export default function Index(_args: Route.ComponentProps) {
           </div>
         </section>
       ))}
-
-      <BottomNavMobile />
     </div>
   )
 }

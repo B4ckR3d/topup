@@ -1,108 +1,61 @@
-import { useForm } from '@inertiajs/react'
-import { Button } from '@umbreon/ui/components/ui/button'
-import { Input } from '@umbreon/ui/components/ui/input'
-import { Label } from '@umbreon/ui/components/ui/label'
-import toast from 'react-hot-toast'
-import type { RegisterValidator } from '#validators/auth'
+import { Link } from '@inertiajs/react'
+import { ArrowLeft, ShieldAlert } from 'lucide-react'
 
 export default function Register() {
-  const { data, setData, errors, processing, post } = useForm<RegisterValidator>({
-    name: '',
-    email: '',
-    phone: '',
-    password: '',
-    password_confirmation: '',
-  })
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    post('/auth/register', {
-      onError: (errors) => {
-        console.error('Registration failed:', errors)
-        if (errors?.error) {
-          toast.error(errors.error)
-        }
-      },
-      onSuccess: (data) => {
-        console.log(data.props.success)
-        toast.success('Registration successful! Redirecting to login...')
-      },
-    })
-  }
-
   return (
-    <main className="flex flex-col flex-1 items-center justify-center p-4">
-      <div className="w-full max-w-md text-center">
-        <h1 className="font-semibold text-2xl">Login</h1>
-        <p className="text-sm text-muted-foreground mt-2">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Culpa, fuga laborum? Quod,
-          libero. Itaque quos magnam necessitatibus odio asperiores repudiandae quis commodi quas
-          aperiam deleniti.
-        </p>
+    <main className="relative min-h-screen w-full flex flex-col justify-between overflow-hidden select-none bg-sky-100 font-sans">
+      {/* Background Image Container */}
+      <div
+        className="absolute inset-0 z-0 bg-cover bg-bottom bg-no-repeat"
+        style={{
+          backgroundImage: "url('/auth-bg.jpg')",
+          backgroundColor: '#87ceeb',
+        }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-sky-300/30 via-transparent to-white/20 pointer-events-none" />
       </div>
-      <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-md mt-8">
-        <div>
-          <Label htmlFor="name" className="mb-1">
-            Name
-          </Label>
-          <Input type="text" value={data.name} onChange={(e) => setData('name', e.target.value)} />
-          {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+
+      {/* Header */}
+      <header className="relative z-10 w-full px-6 py-6 sm:px-10 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-zinc-900 flex items-center justify-center shadow-md">
+            <span className="text-white font-bold text-sm">P</span>
+          </div>
+          <span className="font-bold text-slate-900 tracking-tight text-base sm:text-lg">
+            Pepek Admin
+          </span>
         </div>
-        <div>
-          <Label htmlFor="email" className="mb-1">
-            Email
-          </Label>
-          <Input
-            type="email"
-            value={data.email}
-            onChange={(e) => setData('email', e.target.value)}
-          />
-          {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+      </header>
+
+      {/* Disabled Registration Card */}
+      <div className="relative z-10 flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-[420px] rounded-[32px] bg-white/85 backdrop-blur-2xl border border-white/70 shadow-[0_20px_50px_rgba(0,0,0,0.08)] p-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 border border-amber-200 shadow-sm text-amber-600">
+            <ShieldAlert className="h-7 w-7" />
+          </div>
+
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 mb-2">
+            Registrasi Dinonaktifkan
+          </h1>
+          <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+            Pendaftaran admin publik telah dinonaktifkan demi alasan keamanan. Akun baru hanya dapat
+            dibuat oleh Superadmin melalui dashboard internal.
+          </p>
+
+          <Link
+            href="/auth/login"
+            className="w-full py-3 px-4 bg-slate-900 hover:bg-black text-white text-sm font-semibold rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Kembali ke Pepek Login</span>
+          </Link>
         </div>
-        <div>
-          <Label htmlFor="phone" className="mb-1">
-            Phone
-          </Label>
-          <Input
-            type="text"
-            value={data.phone}
-            onChange={(e) => setData('phone', e.target.value)}
-          />
-          {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
-        </div>
-        <div>
-          <Label htmlFor="password" className="mb-1">
-            Password
-          </Label>
-          <Input
-            type="password"
-            value={data.password}
-            onChange={(e) => setData('password', e.target.value)}
-          />
-          {errors.password && (
-            <p
-              className="text-red-500 text-sm mt-1
-"
-            >
-              {errors.password}
-            </p>
-          )}
-        </div>
-        <div>
-          <Label htmlFor="password_confirmation" className="mb-1">
-            Confirm Password
-          </Label>
-          <Input
-            type="password"
-            value={data.password_confirmation}
-            onChange={(e) => setData('password_confirmation', e.target.value)}
-          />
-          {errors.password_confirmation && (
-            <p className="text-red-500 text-sm mt-1">{errors.password_confirmation}</p>
-          )}
-        </div>
-        <Button className="w-full">{processing ? 'Registering...' : 'Register'}</Button>
-      </form>
+      </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 w-full py-4 text-center text-xs text-slate-500/80">
+        © {new Date().getFullYear()} Umbreon Store. Hak Cipta Dilindungi.
+      </footer>
     </main>
   )
 }

@@ -10,6 +10,7 @@ const SETTINGS_KEYS = {
   app_name: 'app.name',
   app_description: 'app.description',
   app_icon_url: 'app.icon_url',
+  app_logo_url: 'app.logo_url',
   app_android_url: 'app.android_url',
   app_ios_url: 'app.ios_url',
   maintenance_banner_image_url: 'MAINTENANCE_BANNER_IMAGE_URL',
@@ -53,10 +54,14 @@ export default class SettingsController {
     const map = new Map(existing.map((item) => [item.key, item.value]))
 
     const appIconUrl = map.get(SETTINGS_KEYS.app_icon_url) || ''
+    const appLogoUrl = map.get(SETTINGS_KEYS.app_logo_url) || ''
     const maintenanceBannerUrl = map.get(SETTINGS_KEYS.maintenance_banner_image_url) || ''
-    const [appIconFile, maintenanceBannerFile] = await Promise.all([
+    const [appIconFile, appLogoFile, maintenanceBannerFile] = await Promise.all([
       appIconUrl
         ? db.query.fileManager.findFirst({ where: eq(tb.fileManager.url, appIconUrl) })
+        : null,
+      appLogoUrl
+        ? db.query.fileManager.findFirst({ where: eq(tb.fileManager.url, appLogoUrl) })
         : null,
       maintenanceBannerUrl
         ? db.query.fileManager.findFirst({ where: eq(tb.fileManager.url, maintenanceBannerUrl) })
@@ -70,6 +75,8 @@ export default class SettingsController {
         app_description: map.get(SETTINGS_KEYS.app_description) || '',
         app_icon_url: appIconUrl,
         app_icon_file_id: appIconFile?.id || '',
+        app_logo_url: appLogoUrl,
+        app_logo_file_id: appLogoFile?.id || '',
         app_android_url: map.get(SETTINGS_KEYS.app_android_url) || '',
         app_ios_url: map.get(SETTINGS_KEYS.app_ios_url) || '',
         maintenance_banner_image_url: maintenanceBannerUrl,
@@ -116,6 +123,7 @@ export default class SettingsController {
       { key: SETTINGS_KEYS.app_name, value: data.app_name ?? '' },
       { key: SETTINGS_KEYS.app_description, value: data.app_description ?? '' },
       { key: SETTINGS_KEYS.app_icon_url, value: data.app_icon_url ?? '' },
+      { key: SETTINGS_KEYS.app_logo_url, value: data.app_logo_url ?? '' },
       { key: SETTINGS_KEYS.app_android_url, value: data.app_android_url ?? '' },
       { key: SETTINGS_KEYS.app_ios_url, value: data.app_ios_url ?? '' },
       {

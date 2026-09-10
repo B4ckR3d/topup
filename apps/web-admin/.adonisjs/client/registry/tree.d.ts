@@ -21,6 +21,9 @@ export interface ApiDefinition {
     update: typeof routes['users.update']
     addBalance: typeof routes['users.addBalance']
     deductBalance: typeof routes['users.deductBalance']
+    generate2Fa: typeof routes['users.generate2Fa']
+    enable2Fa: typeof routes['users.enable2Fa']
+    disable2Fa: typeof routes['users.disable2Fa']
   }
   productCategories: {
     index: typeof routes['productCategories.index']

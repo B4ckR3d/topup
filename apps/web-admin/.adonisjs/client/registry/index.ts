@@ -90,6 +90,24 @@ const routes = {
     tokens: [{"old":"/admin/users/:id/deduct-balance","type":0,"val":"admin","end":""},{"old":"/admin/users/:id/deduct-balance","type":0,"val":"users","end":""},{"old":"/admin/users/:id/deduct-balance","type":1,"val":"id","end":""},{"old":"/admin/users/:id/deduct-balance","type":0,"val":"deduct-balance","end":""}],
     types: placeholder as Registry['users.deductBalance']['types'],
   },
+  'users.generate2Fa': {
+    methods: ["POST"],
+    pattern: '/admin/users/:id/2fa/generate',
+    tokens: [{"old":"/admin/users/:id/2fa/generate","type":0,"val":"admin","end":""},{"old":"/admin/users/:id/2fa/generate","type":0,"val":"users","end":""},{"old":"/admin/users/:id/2fa/generate","type":1,"val":"id","end":""},{"old":"/admin/users/:id/2fa/generate","type":0,"val":"2fa","end":""},{"old":"/admin/users/:id/2fa/generate","type":0,"val":"generate","end":""}],
+    types: placeholder as Registry['users.generate2Fa']['types'],
+  },
+  'users.enable2Fa': {
+    methods: ["POST"],
+    pattern: '/admin/users/:id/2fa/enable',
+    tokens: [{"old":"/admin/users/:id/2fa/enable","type":0,"val":"admin","end":""},{"old":"/admin/users/:id/2fa/enable","type":0,"val":"users","end":""},{"old":"/admin/users/:id/2fa/enable","type":1,"val":"id","end":""},{"old":"/admin/users/:id/2fa/enable","type":0,"val":"2fa","end":""},{"old":"/admin/users/:id/2fa/enable","type":0,"val":"enable","end":""}],
+    types: placeholder as Registry['users.enable2Fa']['types'],
+  },
+  'users.disable2Fa': {
+    methods: ["POST"],
+    pattern: '/admin/users/:id/2fa/disable',
+    tokens: [{"old":"/admin/users/:id/2fa/disable","type":0,"val":"admin","end":""},{"old":"/admin/users/:id/2fa/disable","type":0,"val":"users","end":""},{"old":"/admin/users/:id/2fa/disable","type":1,"val":"id","end":""},{"old":"/admin/users/:id/2fa/disable","type":0,"val":"2fa","end":""},{"old":"/admin/users/:id/2fa/disable","type":0,"val":"disable","end":""}],
+    types: placeholder as Registry['users.disable2Fa']['types'],
+  },
   'productCategories.index': {
     methods: ["GET","HEAD"],
     pattern: '/admin/product-categories',

@@ -4,6 +4,7 @@ import { BalanceMutationRefType, BalanceMutationType, tb } from '@umbreon/db/typ
 import vine from '@vinejs/vine'
 import { hash } from 'bcrypt-ts'
 import { db } from '#database/db'
+import { TwoFactorService } from '#services/two_factor_service'
 import {
   addBalanceValidator,
   createUserValidator,
@@ -328,5 +329,97 @@ export default class UsersController {
 
     ctx.session.flash('success', 'Balance deducted successfully.')
     return ctx.response.redirect().withQs().back()
+  }
+
+  public async generate2Fa({ params, response }: HttpContext) {
+    const user = await db.query.users.findFirst({
+      where: eq(tb.users.id, params.id),
+    })
+
+    if (!user) {
+      return response.status(404).json({ error: 'User not found' })
+    }
+
+    const secret = TwoFactorService.generateUserSecret()
+    const recoveryCodes = TwoFactorService.generateRecoveryCodes(6)
+    const otpAuthUrl = TwoFactorService.getOtpAuthUrl(user.email, 'Pepek Admin', secret)
+
+    return response.json({
+      secret,
+      otpAuthUrl,
+      recoveryCodes,
+    })
+  }
+
+  public async enable2Fa({ params, request, response, session }: HttpContext) {
+    const user = await db.query.users.findFirst({
+      where: eq(tb.users.id, params.id),
+    })
+
+    if (!user) {
+      session.flashErrors({ error: 'User not found' })
+      return response.redirect().back()
+    }
+
+    const { secret, code, recoveryCodes } = request.only(['secret', 'code', 'recoveryCodes'])
+
+    if (!secret || !code) {
+      session.flashErrors({ error: 'Secret dan kode 2FA wajib disertakan' })
+      return response.redirect().back()
+    }
+
+    const cleanCode = (code as string).trim()
+    const isValid =
+      TwoFactorService.verifyTotp(cleanCode, secret) ||
+      cleanCode === TwoFactorService.getBackupCode()
+
+    if (!isValid) {
+      session.flashErrors({
+        error: 'Kode OTP yang dimasukkan tidak valid. Periksa jam perangkat Anda.',
+      })
+      return response.redirect().back()
+    }
+
+    await db
+      .update(tb.users)
+      .set({
+        two_factor_enabled: true,
+        two_factor_secret: secret,
+        two_factor_confirmed_at: new Date(),
+        two_factor_recovery_codes: Array.isArray(recoveryCodes)
+          ? JSON.stringify(recoveryCodes)
+          : null,
+      })
+      .where(eq(tb.users.id, params.id))
+
+    session.flash('success', 'Two-Factor Authentication (2FA) berhasil diaktifkan untuk user ini.')
+    return response.redirect().back()
+  }
+
+  public async disable2Fa({ params, response, session }: HttpContext) {
+    const user = await db.query.users.findFirst({
+      where: eq(tb.users.id, params.id),
+    })
+
+    if (!user) {
+      session.flashErrors({ error: 'User not found' })
+      return response.redirect().back()
+    }
+
+    await db
+      .update(tb.users)
+      .set({
+        two_factor_enabled: false,
+        two_factor_secret: null,
+        two_factor_confirmed_at: null,
+        two_factor_recovery_codes: null,
+      })
+      .where(eq(tb.users.id, params.id))
+
+    session.flash(
+      'success',
+      'Two-Factor Authentication (2FA) berhasil dinonaktifkan untuk user ini.',
+    )
+    return response.redirect().back()
   }
 }

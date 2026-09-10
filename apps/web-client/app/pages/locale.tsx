@@ -19,7 +19,6 @@ export default function Locale(_args: Route.ComponentProps) {
             </UserLayout>
           </SetPinWrapper>
         </GoogleOAuthProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
       </Provider>
     </QueryClientProvider>
   )
