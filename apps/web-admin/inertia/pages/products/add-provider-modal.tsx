@@ -57,13 +57,15 @@ type DigiflazzProductPrepaid = {
 type Props = {
   productSubCategoryId: string
   subCategoryName?: string | null
-  isSubCategoryActive: boolean
+  categoryName?: string
+  isSubCategoryActive?: boolean
 }
 
 export default function AddProviderProductsModal({
   productSubCategoryId,
   subCategoryName,
-  isSubCategoryActive,
+  categoryName,
+  isSubCategoryActive = true,
 }: Props) {
   const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
@@ -136,6 +138,30 @@ export default function AddProviderProductsModal({
     return { categories, brands, types }
   }, [providerProducts.data?.data, categoryFilter, brandFilter])
 
+  // Otomatis deteksi & pilih Brand sesuai kategori jika belum dipilih
+  useEffect(() => {
+    if (open && options.brands.length > 0 && brandFilter === 'all') {
+      const matchTarget = (categoryName || subCategoryName || '').toLowerCase()
+      if (matchTarget) {
+        const found = options.brands.find((b) => {
+          const bLow = b.toLowerCase()
+          return (
+            matchTarget.includes(bLow) ||
+            bLow.includes(matchTarget) ||
+            (matchTarget.includes('mobile legend') && bLow.includes('mobile legend')) ||
+            (matchTarget.includes('free fire') && bLow.includes('free fire')) ||
+            (matchTarget.includes('pubg') && bLow.includes('pubg')) ||
+            (matchTarget.includes('genshin') && bLow.includes('genshin')) ||
+            (matchTarget.includes('valorant') && bLow.includes('valorant'))
+          )
+        })
+        if (found) {
+          setBrandFilter(found)
+        }
+      }
+    }
+  }, [open, options.brands, categoryName, subCategoryName, brandFilter])
+
   const filteredProducts = useMemo(() => {
     const list = providerProducts.data?.data ?? []
     return list.filter((item) => {
@@ -176,16 +202,30 @@ export default function AddProviderProductsModal({
     )
   }
 
+  const handleSelectAllFiltered = () => {
+    const selectable = filteredProducts
+      .filter((item) => !existingCodes.has(item.buyer_sku_code))
+      .map((item) => item.buyer_sku_code)
+    setSelectedCodes(selectable)
+    toast.success(`${selectable.length} produk dipilih!`)
+  }
+
+  const handleDeselectAll = () => {
+    setSelectedCodes([])
+  }
+
   const resetPaging = () => setPage(1)
 
   const addProducts = useMutation({
     mutationFn: async () => {
-      if (!imageId) {
-        throw new Error('Please select an image first')
-      }
       const selectedItems = filteredProducts.filter((item) =>
         selectedCodes.includes(item.buyer_sku_code),
       )
+      if (selectedItems.length === 0) {
+        throw new Error('Pilih setidaknya 1 produk yang ingin diimpor')
+      }
+
+      let successCount = 0
       for (const item of selectedItems) {
         if (existingCodes.has(item.buyer_sku_code)) {
           continue
@@ -207,7 +247,7 @@ export default function AddProviderProductsModal({
           is_featured: false,
           label: '',
           label_image: '',
-          image_id: imageId,
+          image_id: imageId || undefined,
           sku_code: item.buyer_sku_code.slice(0, 15),
           profit_static: profitStatic,
           profit_percentage: profitPercentage,
@@ -223,18 +263,21 @@ export default function AddProviderProductsModal({
           billing_type: ProductBillingType.PREPAID,
           fullfillment_type: ProductFullfillmentType.AUTOMATIC_DIRECT,
         })
+        successCount++
       }
+      return successCount
     },
-    onSuccess: () => {
-      toast.success('Products added successfully')
+    onSuccess: (count) => {
+      toast.success(`Berhasil mengimpor ${count} produk ke database!`)
       setSelectedCodes([])
       queryClient.invalidateQueries({ queryKey: ['products'], exact: false })
       queryClient.invalidateQueries({
         queryKey: ['existing-product-codes', productSubCategoryId, provider],
       })
+      setOpen(false)
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.error || error?.message || 'Failed to add products')
+      toast.error(error?.response?.data?.error || error?.message || 'Gagal menambahkan produk')
     },
   })
 
@@ -249,330 +292,396 @@ export default function AddProviderProductsModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DialogTrigger asChild>
-            <Button
-              size="icon"
-              variant="outline"
-              disabled={!isSubCategoryActive}
-              aria-label="Add from Provider"
-            >
-              <DownloadCloudIcon className="size-4" aria-hidden="true" />
-            </Button>
-          </DialogTrigger>
-        </TooltipTrigger>
-        <TooltipContent>Add from Provider</TooltipContent>
-      </Tooltip>
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold shadow-sm"
+        >
+          <DownloadCloudIcon className="size-4" />
+          <span>☁️ Import dari Provider (H2H)</span>
+        </Button>
+      </DialogTrigger>
       <DialogContent className="fixed inset-0 left-0 top-0 translate-x-0 translate-y-0 w-screen max-w-none h-dvh max-h-dvh overflow-y-auto rounded-none p-4 sm:left-[50%] sm:top-[50%] sm:right-auto sm:bottom-auto sm:w-full sm:max-w-[calc(100vw-1rem)] md:max-w-6xl sm:h-[90dvh] sm:max-h-[90dvh] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:overflow-hidden sm:rounded-xl sm:p-6 flex flex-col">
         <DialogHeader>
-          <DialogTitle>Add Products from Provider</DialogTitle>
+          <DialogTitle className="text-xl flex items-center gap-2">
+            <span>☁️ Import Produk Otomatis dari Provider</span>
+          </DialogTitle>
           <DialogDescription>
-            {subCategoryName ? `Sub Category: ${subCategoryName}` : 'Select products to add'}
+            Tarik katalog SKU, harga modal, dan stok dari Digiflazz / VIP-Reseller secara massal ke{' '}
+            {subCategoryName ? `Sub-Kategori: "${subCategoryName}"` : 'Database'}.
           </DialogDescription>
         </DialogHeader>
 
-        {!isSubCategoryActive ? (
-          <div className="text-sm text-muted-foreground">Sub category is not active.</div>
-        ) : (
-          <div className="grid gap-4 sm:min-h-0 sm:flex-1 lg:overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)]">
-            <div className="min-w-0 rounded-xl border border-border/70 bg-card/50 p-3 space-y-4 lg:min-h-0 lg:overflow-y-auto">
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label>Provider</Label>
-                  <Select value={provider} onValueChange={(v) => setProvider(v as ProductProvider)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select provider" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ProductProvider.DIGIFLAZZ}>Digiflazz</SelectItem>
-                      <SelectItem value={ProductProvider.VIPRESELLER}>VIP-Reseller</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Product Image</Label>
-                  <FileManager onFilesSelected={(file) => setImageId(file.id)} />
-                </div>
+        <div className="grid gap-4 sm:min-h-0 sm:flex-1 lg:overflow-hidden lg:grid-cols-[320px_minmax(0,1fr)]">
+          <div className="min-w-0 rounded-xl border border-border/70 bg-card/50 p-3 space-y-4 lg:min-h-0 lg:overflow-y-auto">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label>Provider</Label>
+                <Select value={provider} onValueChange={(v) => setProvider(v as ProductProvider)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ProductProvider.DIGIFLAZZ}>Digiflazz</SelectItem>
+                    <SelectItem value={ProductProvider.VIPRESELLER}>VIP-Reseller</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label>Profit Static (IDR)</Label>
-                  <Input
-                    type="number"
-                    value={profitStatic}
-                    onChange={(e) => setProfitStatic(Number(e.target.value))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Profit Percentage (%)</Label>
-                  <Input
-                    type="number"
-                    value={profitPercentage}
-                    onChange={(e) => setProfitPercentage(Number(e.target.value))}
-                    min={0}
-                    max={100}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Provider Max Price</Label>
-                  <Select
-                    value={maxPriceMode}
-                    onValueChange={(v) => setMaxPriceMode(v as 'provider' | 'total')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select max price" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="provider">Use Provider Price</SelectItem>
-                      <SelectItem value="total">Use Total Price</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Search</Label>
-                  <Input
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value)
-                      resetPaging()
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label>Stock Source</Label>
-                  <Select
-                    value={stockMode}
-                    onValueChange={(v) => setStockMode(v as 'provider' | 'manual')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select stock source" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="provider">Use Provider Stock</SelectItem>
-                      <SelectItem value="manual">Manual Stock</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Manual Stock</Label>
-                  <Input
-                    type="number"
-                    value={stockOverride}
-                    onChange={(e) => setStockOverride(Number(e.target.value))}
-                    disabled={stockMode !== 'manual'}
-                  />
-                </div>
-                <div className="flex items-center gap-3">
-                  <Switch checked={skipExisting} onCheckedChange={setSkipExisting} />
-                  <span className="text-sm">Hide existing products</span>
-                </div>
-              </div>
-
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label>Category</Label>
-                  <Select
-                    value={categoryFilter}
-                    onValueChange={(value) => {
-                      setCategoryFilter(value)
-                      setBrandFilter('all')
-                      setTypeFilter('all')
-                      resetPaging()
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All categories" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      {options.categories.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Brand</Label>
-                  <Select
-                    value={brandFilter}
-                    onValueChange={(value) => {
-                      setBrandFilter(value)
-                      setTypeFilter('all')
-                      resetPaging()
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All brands" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      {options.brands.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Type</Label>
-                  <Select
-                    value={typeFilter}
-                    onValueChange={(value) => {
-                      setTypeFilter(value)
-                      resetPaging()
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="All types" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      {options.types.map((item) => (
-                        <SelectItem key={item} value={item}>
-                          {item}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Product Image</Label>
+                <FileManager onFilesSelected={(file) => setImageId(file.id)} />
               </div>
             </div>
 
-            <div className="min-w-0 lg:min-h-0 flex flex-col gap-3">
-              <div className="min-w-0 lg:min-h-0 lg:flex-1 overflow-hidden">
-                <div className="max-h-[55dvh] lg:h-full lg:max-h-none overflow-auto rounded-md border border-border/70">
-                  <Table className="min-w-[720px]">
-                    <TableHeader className="sticky top-0 bg-muted/50 text-xs text-muted-foreground">
-                      <TableRow className="hover:bg-transparent">
-                        <TableHead className="px-3 py-2">Select</TableHead>
-                        <TableHead className="px-3 py-2">Product</TableHead>
-                        <TableHead className="px-3 py-2">Category</TableHead>
-                        <TableHead className="px-3 py-2">Brand</TableHead>
-                        <TableHead className="px-3 py-2">Type</TableHead>
-                        <TableHead className="px-3 py-2 text-right">Price</TableHead>
-                        <TableHead className="px-3 py-2 text-right">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {providerProducts.isLoading && (
-                        <TableRow>
-                          <TableCell
-                            colSpan={7}
-                            className="px-3 py-6 text-center text-muted-foreground"
-                          >
-                            Loading products...
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {providerProducts.isError && (
-                        <TableRow>
-                          <TableCell colSpan={7} className="px-3 py-6 text-center text-red-500">
-                            Failed to load provider products. Please try again later.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {!providerProducts.isLoading && pagedProducts.length === 0 && (
-                        <TableRow>
-                          <TableCell
-                            colSpan={7}
-                            className="px-3 py-6 text-center text-muted-foreground"
-                          >
-                            No products found
-                          </TableCell>
-                        </TableRow>
-                      )}
-                      {pagedProducts.map((item) => {
-                        const exists = existingCodes.has(item.buyer_sku_code)
-                        const selectable = !exists
-                        return (
-                          <TableRow key={item.buyer_sku_code}>
-                            <TableCell className="px-3 py-2">
-                              <Checkbox
-                                disabled={!selectable}
-                                checked={selectedSet.has(item.buyer_sku_code)}
-                                onCheckedChange={() => toggleSelection(item.buyer_sku_code)}
-                              />
-                            </TableCell>
-                            <TableCell className="px-3 py-2">
-                              <p className="font-medium">{item.product_name}</p>
-                              <p className="text-xs text-muted-foreground">{item.buyer_sku_code}</p>
-                            </TableCell>
-                            <TableCell className="px-3 py-2">{item.category}</TableCell>
-                            <TableCell className="px-3 py-2">{item.brand}</TableCell>
-                            <TableCell className="px-3 py-2">{item.type}</TableCell>
-                            <TableCell className="px-3 py-2 text-right">
-                              {Number(item.price).toLocaleString('id-ID')}
-                            </TableCell>
-                            <TableCell className="px-3 py-2 text-right">
-                              {exists
-                                ? 'Exists'
-                                : item.buyer_product_status && item.seller_product_status
-                                  ? 'Active'
-                                  : 'Inactive'}
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label>Profit Static (IDR)</Label>
+                <Input
+                  type="number"
+                  value={profitStatic}
+                  onChange={(e) => setProfitStatic(Number(e.target.value))}
+                />
               </div>
-              <div className="shrink-0 flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                <span className="whitespace-nowrap">
-                  Showing {(pageSafe - 1) * pageSize + 1}-
-                  {Math.min(pageSafe * pageSize, sortedProducts.length)} of {sortedProducts.length}
-                </span>
-                <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted/50 px-3 py-2">
-                  <select
-                    className="h-7 rounded-md border border-input bg-background px-2 text-xs focus-visible:border-primary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/15"
-                    value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(Number(e.target.value))
-                      setPage(1)
-                    }}
-                  >
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pageSafe <= 1}
-                    onClick={() => setPage(pageSafe - 1)}
-                  >
-                    Prev
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pageSafe >= totalPages}
-                    onClick={() => setPage(pageSafe + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
+              <div className="space-y-2">
+                <Label>Profit Percentage (%)</Label>
+                <Input
+                  type="number"
+                  value={profitPercentage}
+                  onChange={(e) => setProfitPercentage(Number(e.target.value))}
+                  min={0}
+                  max={100}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Provider Max Price</Label>
+                <Select
+                  value={maxPriceMode}
+                  onValueChange={(v) => setMaxPriceMode(v as 'provider' | 'total')}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select max price" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="provider">Use Provider Price</SelectItem>
+                    <SelectItem value="total">Use Total Price</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Search</Label>
+                <Input
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value)
+                    resetPaging()
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label>Stock Source</Label>
+                <Select
+                  value={stockMode}
+                  onValueChange={(v) => setStockMode(v as 'provider' | 'manual')}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select stock source" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="provider">Use Provider Stock</SelectItem>
+                    <SelectItem value="manual">Manual Stock</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Manual Stock</Label>
+                <Input
+                  type="number"
+                  value={stockOverride}
+                  onChange={(e) => setStockOverride(Number(e.target.value))}
+                  disabled={stockMode !== 'manual'}
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <Switch checked={skipExisting} onCheckedChange={setSkipExisting} />
+                <span className="text-sm">Hide existing products</span>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select
+                  value={categoryFilter}
+                  onValueChange={(value) => {
+                    setCategoryFilter(value)
+                    setBrandFilter('all')
+                    setTypeFilter('all')
+                    resetPaging()
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {options.categories.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Brand</Label>
+                <Select
+                  value={brandFilter}
+                  onValueChange={(value) => {
+                    setBrandFilter(value)
+                    setTypeFilter('all')
+                    resetPaging()
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All brands" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {options.brands.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select
+                  value={typeFilter}
+                  onValueChange={(value) => {
+                    setTypeFilter(value)
+                    resetPaging()
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="All types" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {options.types.map((item) => (
+                      <SelectItem key={item} value={item}>
+                        {item}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
-        )}
-        <DialogFooter className="gap-2 sm:justify-end">
-          <Button
-            type="button"
-            className="w-full sm:w-auto"
-            disabled={selectedCodes.length === 0 || addProducts.isPending}
-            onClick={() => addProducts.mutate()}
-          >
-            {addProducts.isPending ? 'Adding...' : `Add Selected (${selectedCodes.length})`}
-          </Button>
+
+          <div className="min-w-0 lg:min-h-0 flex flex-col gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/40 p-2.5 rounded-lg border border-border/60">
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={handleSelectAllFiltered}
+                  className="text-xs h-8 gap-1.5 font-medium border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/10"
+                >
+                  <span>
+                    ✅ Pilih Semua (
+                    {filteredProducts.filter((i) => !existingCodes.has(i.buyer_sku_code)).length}{' '}
+                    Produk)
+                  </span>
+                </Button>
+                {selectedCodes.length > 0 && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleDeselectAll}
+                    className="text-xs h-8 text-muted-foreground hover:text-destructive"
+                  >
+                    Batal Pilih
+                  </Button>
+                )}
+              </div>
+              <div className="text-xs font-semibold">
+                <span className="text-muted-foreground">Dipilih: </span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-bold">
+                  {selectedCodes.length} Produk
+                </span>
+              </div>
+            </div>
+
+            <div className="min-w-0 lg:min-h-0 lg:flex-1 overflow-hidden">
+              <div className="max-h-[55dvh] lg:h-full lg:max-h-none overflow-auto rounded-md border border-border/70">
+                <Table className="min-w-[720px]">
+                  <TableHeader className="sticky top-0 bg-muted/90 backdrop-blur text-xs text-muted-foreground z-10">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="px-3 py-2 w-12">
+                        <Checkbox
+                          checked={
+                            pagedProducts.filter((i) => !existingCodes.has(i.buyer_sku_code))
+                              .length > 0 &&
+                            pagedProducts
+                              .filter((i) => !existingCodes.has(i.buyer_sku_code))
+                              .every((i) => selectedSet.has(i.buyer_sku_code))
+                          }
+                          onCheckedChange={(checked) => {
+                            const selectable = pagedProducts
+                              .filter((i) => !existingCodes.has(i.buyer_sku_code))
+                              .map((i) => i.buyer_sku_code)
+                            if (checked) {
+                              const next = new Set([...selectedCodes, ...selectable])
+                              setSelectedCodes(Array.from(next))
+                            } else {
+                              const removeSet = new Set(selectable)
+                              setSelectedCodes((prev) => prev.filter((c) => !removeSet.has(c)))
+                            }
+                          }}
+                        />
+                      </TableHead>
+                      <TableHead className="px-3 py-2">Product</TableHead>
+                      <TableHead className="px-3 py-2">Category</TableHead>
+                      <TableHead className="px-3 py-2">Brand</TableHead>
+                      <TableHead className="px-3 py-2">Type</TableHead>
+                      <TableHead className="px-3 py-2 text-right">Price (Modal)</TableHead>
+                      <TableHead className="px-3 py-2 text-right">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {providerProducts.isLoading && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={7}
+                          className="px-3 py-6 text-center text-muted-foreground"
+                        >
+                          Loading products...
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {providerProducts.isError && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="px-3 py-6 text-center text-red-500">
+                          Failed to load provider products. Please try again later.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {!providerProducts.isLoading && pagedProducts.length === 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={7}
+                          className="px-3 py-6 text-center text-muted-foreground"
+                        >
+                          No products found
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {pagedProducts.map((item) => {
+                      const exists = existingCodes.has(item.buyer_sku_code)
+                      const selectable = !exists
+                      return (
+                        <TableRow key={item.buyer_sku_code}>
+                          <TableCell className="px-3 py-2">
+                            <Checkbox
+                              disabled={!selectable}
+                              checked={selectedSet.has(item.buyer_sku_code)}
+                              onCheckedChange={() => toggleSelection(item.buyer_sku_code)}
+                            />
+                          </TableCell>
+                          <TableCell className="px-3 py-2">
+                            <p className="font-medium">{item.product_name}</p>
+                            <p className="text-xs text-muted-foreground">{item.buyer_sku_code}</p>
+                          </TableCell>
+                          <TableCell className="px-3 py-2">{item.category}</TableCell>
+                          <TableCell className="px-3 py-2">{item.brand}</TableCell>
+                          <TableCell className="px-3 py-2">{item.type}</TableCell>
+                          <TableCell className="px-3 py-2 text-right">
+                            {Number(item.price).toLocaleString('id-ID')}
+                          </TableCell>
+                          <TableCell className="px-3 py-2 text-right">
+                            {exists
+                              ? 'Exists'
+                              : item.buyer_product_status && item.seller_product_status
+                                ? 'Active'
+                                : 'Inactive'}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+            <div className="shrink-0 flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+              <span className="whitespace-nowrap">
+                Showing {(pageSafe - 1) * pageSize + 1}-
+                {Math.min(pageSafe * pageSize, sortedProducts.length)} of {sortedProducts.length}
+              </span>
+              <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted/50 px-3 py-2">
+                <select
+                  className="h-7 rounded-md border border-input bg-background px-2 text-xs focus-visible:border-primary/30 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/15"
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value))
+                    setPage(1)
+                  }}
+                >
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pageSafe <= 1}
+                  onClick={() => setPage(pageSafe - 1)}
+                >
+                  Prev
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pageSafe >= totalPages}
+                  onClick={() => setPage(pageSafe + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-border/80 pt-3">
+          <div className="text-xs text-muted-foreground w-full sm:w-auto text-center sm:text-left">
+            {selectedCodes.length > 0 ? (
+              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                Siap mengimpor {selectedCodes.length} produk terpilih ke database
+              </span>
+            ) : (
+              <span>Centang produk yang ingin diimpor di tabel</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Batal
+            </Button>
+            <Button
+              type="button"
+              disabled={selectedCodes.length === 0 || addProducts.isPending}
+              onClick={() => addProducts.mutate()}
+              className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold"
+            >
+              {addProducts.isPending
+                ? 'Mengimpor Produk...'
+                : `Import ${selectedCodes.length} Produk`}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

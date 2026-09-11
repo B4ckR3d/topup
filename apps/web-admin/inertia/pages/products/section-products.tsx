@@ -27,11 +27,16 @@ type Props = {
     is_available: boolean | null
     name: string
   } | null
+  categoryName?: string
 }
 
 type Product = InferSelectModel<typeof tb.products>
 
-export default function SectionProducts({ productSubCategoryId, selectedSubCategory }: Props) {
+export default function SectionProducts({
+  productSubCategoryId,
+  selectedSubCategory,
+  categoryName,
+}: Props) {
   const [queryParams, setQueryParams] = useState<GetAllProductsQueryValidator>({
     page: 1,
     limit: 10,
@@ -250,15 +255,28 @@ export default function SectionProducts({ productSubCategoryId, selectedSubCateg
             <AddProviderProductsModal
               productSubCategoryId={productSubCategoryId}
               subCategoryName={selectedSubCategory?.name}
-              isSubCategoryActive={!!selectedSubCategory?.is_available}
+              categoryName={categoryName}
+              isSubCategoryActive={true}
             />
             <AddProductModal productSubCategoryId={productSubCategoryId} />
           </div>
         )}
       </div>
+      {!productSubCategoryId && (
+        <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-6 text-center mt-4">
+          <p className="text-sm font-semibold text-foreground">
+            ⚡ Pilih salah satu Sub-Kategori di atas untuk melihat & mengimpor produk H2H.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Jika belum ada sub-kategori, klik tombol <strong>"+ Add Sub Category"</strong> di atas
+            terlebih dahulu.
+          </p>
+        </div>
+      )}
       {selectedSubCategory && !selectedSubCategory.is_available && (
         <p className="text-xs text-muted-foreground mt-2">
-          Sub category is inactive. Activate it to add products from provider.
+          Sub-kategori ini sedang nonaktif. Anda tetap bisa mengimpor produk dan mengaktifkannya
+          kapan saja.
         </p>
       )}
       <div className="mt-4 grid min-w-0">

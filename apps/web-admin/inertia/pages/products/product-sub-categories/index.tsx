@@ -41,7 +41,17 @@ export default function SectionProductSubCategory({
       </div>
       <div className="flex flex-wrap gap-3 mt-2">
         {productCategory.product_sub_categories?.length < 1 && (
-          <p className="text-sm text-muted-foreground">No sub-categories found.</p>
+          <div className="w-full rounded-xl border border-dashed border-amber-500/40 bg-amber-500/10 p-4 text-center">
+            <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+              ⚠️ Belum ada Sub-Kategori untuk game/kategori ini
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Produk H2H dikelompokkan di dalam Sub-Kategori (misal: <em>"Diamonds"</em>,{' '}
+              <em>"Weekly Pass"</em>, atau <em>"Reguler"</em>). Silakan klik tombol{' '}
+              <strong>"+ Add Sub Category"</strong> di atas untuk membuat sub-kategori pertama agar
+              bisa menarik produk H2H otomatis!
+            </p>
+          </div>
         )}
         {productCategory.product_sub_categories?.map((sub) => (
           <Card

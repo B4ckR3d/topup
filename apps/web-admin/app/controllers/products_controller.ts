@@ -34,20 +34,31 @@ export default class ProductsController {
       return ctx.response.redirect().back()
     }
 
-    const image = await db.query.fileManager.findFirst({
-      where: eq(tb.fileManager.id, imageId),
-    })
-
-    if (!image) {
-      ctx.session.flashErrors({
-        image_id: 'Image file not found',
+    let imageUrl = '/images/qris.png'
+    if (imageId) {
+      const image = await db.query.fileManager.findFirst({
+        where: eq(tb.fileManager.id, imageId),
       })
-      return ctx.response.redirect().back()
+      if (image) {
+        imageUrl = image.url
+      }
+    } else {
+      const subCat = await db.query.productSubCategories.findFirst({
+        where: eq(tb.productSubCategories.id, data.product_sub_category_id),
+        with: {
+          product_category: true,
+        },
+      })
+      if (subCat?.image_url) {
+        imageUrl = subCat.image_url
+      } else if (subCat?.product_category?.image_url) {
+        imageUrl = subCat.product_category.image_url
+      }
     }
 
     await db.insert(tb.products).values({
       ...data,
-      image_url: image.url,
+      image_url: imageUrl,
       price: totalPrice,
     })
 

@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@umbreon/ui/components/ui/select'
-import { ChevronDown, Plus } from 'lucide-react'
+import { ChevronDown, DownloadCloud, Plus } from 'lucide-react'
 import { useState } from 'react'
 import type ProductsCategoriesController from '#controllers/product_categories_controller'
 import Image from '~/components/image'
@@ -54,11 +54,17 @@ export default function ProductCategory(props: Props) {
 
   return (
     <AdminLayout>
-      <div className="mb-4 mt-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-foreground">Product Categories</h1>
+      <div className="mb-4 mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Product Categories</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Kelola game & layanan. Klik <strong>"Kelola & Import Produk"</strong> pada kategori
+            untuk menarik produk H2H otomatis.
+          </p>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button className="gap-1">
+            <Button className="gap-1 bg-primary font-medium shadow-sm">
               <Plus className="size-4" />
               <span>Add New</span>
               <ChevronDown className="size-3.5 opacity-70" />
@@ -212,8 +218,15 @@ const columns: ColumnDef<Props['productCategories'][number]>[] = [
     header: 'Actions',
     cell: ({ row }) => (
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" asChild>
-          <Link href={`/admin/product-categories/${row.original.id}`}>Detail</Link>
+        <Button
+          size="sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 font-medium shadow-sm"
+          asChild
+        >
+          <Link href={`/admin/product-categories/${row.original.id}`}>
+            <DownloadCloud className="size-3.5" />
+            <span>Kelola & Import Produk</span>
+          </Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
           <Link href={`/admin/product-categories/${row.original.id}/edit`}>Edit</Link>

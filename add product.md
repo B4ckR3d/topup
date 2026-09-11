@@ -69,33 +69,33 @@ Cukup pilih game yang diinginkan dari dropdown:
 
 ---
 
-## 🚀 3. Alur Tambah Produk H2H Otomatis ("Tinggal Add Auto & Edit Harga")
+## 🚀 3. Alur Tambah Produk H2H Otomatis ("Tinggal 1-Klik Import & Edit Harga")
 
-Setelah Kategori Game dibuat, ikuti langkah berikut untuk menarik seluruh item nominal secara otomatis:
+Kini Anda dapat mengimpor puluhan hingga ratusan nominal produk dari Digiflazz / VIP-Reseller secara otomatis tanpa input manual satu per satu:
 
-### **Langkah 1: Buat Sub-Kategori**
-1. Buka Kategori Game yang baru dibuat (klik nama game di tabel kategori).
-2. Pada bagian **Product Sub Categories**, klik tombol **`+ Add Sub Category`**.
-3. Masukkan nama sub-kategori, misalnya:
-   * `Diamonds` (untuk game Mobile Legends / Free Fire)
-   * `Weekly Pass` (untuk paket mingguan)
-   * `Unknown Cash` (untuk PUBG)
-4. Klik **Save**.
+### **Langkah 1: Buka Kategori Game**
+1. Buka menu **Product Categories** (`/admin/product-categories`).
+2. Pada baris game yang ingin diisi (misal: *Mobile Legends*), klik tombol hijau:  
+   👉 **`[ ☁️ Kelola & Import Produk ]`**
+3. Halaman detail game akan terbuka, dan Sub-Kategori pertama (misal: *Diamonds*) **langsung otomatis terpilih secara otomatis**.
+   *(Jika kategori belum memiliki Sub-Kategori, klik tombol `+ Add Sub Category` lalu beri nama "Diamonds" / "Reguler").*
 
-### **Langkah 2: Ambil Produk Otomatis dari Provider (Add from Provider)**
-1. Klik Sub-Kategori yang baru dibuat agar aktif.
-2. Di tabel produk sebelah kanan atas, klik tombol icon awan **`Add from Provider`**.
-3. Modal penarik katalog provider akan muncul:
+### **Langkah 2: Tarik Seluruh Produk Otomatis (1-Klik Massal)**
+1. Di atas tabel produk sebelah kanan, klik tombol hijau besar:  
+   👉 **`[ ☁️ Import dari Provider (H2H) ]`**
+2. Modal import otomatis akan terbuka:
    * **Pilih Provider**: `DIGIFLAZZ` atau `VIPRESELLER`.
-   * **Filter Brand**: Pilih nama game (misal: `MOBILE LEGENDS`).
+   * **Filter Brand**: Otomatis terdeteksi sesuai nama game (misal: `MOBILE LEGENDS`).
    * **Atur Margin Keuntungan (Profit)**:
-     * **Profit Statis (Rp)**: Misal `Rp 1.500`.
-     * **Profit Persentase (%)**: Misal `5%`.
-     * *Harga jual ke pembeli dihitung otomatis di atas harga modal H2H.*
-   * **Pilih Gambar/Icon Produk**: Pilih icon item dari File Manager.
-   * **Centang Produk**: Centang item yang mau dijual (bisa centang satu per satu atau centang semua sekaligus).
-   * Klik **Tambah Produk**.
-4. Selesai! Semua item langsung tersimpan di database lengkap dengan harga modal, harga jual, dan kode SKU H2H.
+     * **Profit Statis (Rp)**: Contoh `Rp 1.500`.
+     * **Profit Persentase (%)**: Contoh `5%`.
+     * *Harga jual ke pembeli langsung dihitung otomatis di atas harga modal H2H.*
+   * **Pilih Semua Produk Sekaligus (Bulk Select)**:
+     * Klik tombol **`✅ Pilih Semua (X Produk)`** di atas tabel.
+     * Tidak perlu mencentang manual satu per satu!
+   * **Gambar Produk**: *Bersifat Opsional* (otomatis mewarisi gambar/icon game jika dikosongkan).
+   * Klik tombol **`Import X Produk`**.
+3. **Selesai!** Seluruh item langsung tersimpan di database lengkap dengan harga modal, harga jual, dan kode SKU H2H.
 
 ### **Langkah 3: Edit Harga & Status Kapan Saja**
 * **Edit Manual Per Item**: Klik ikon **Pensil (Edit)** di baris produk untuk mengubah harga jual, margin, atau mengganti nama tampilan item.

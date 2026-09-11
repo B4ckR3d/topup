@@ -10,7 +10,9 @@ import SectionInputFields from './input-fields'
 type Props = InferPageProps<ProductsCategoriesController, 'detail'>
 
 export default function ProductCategoryDetail({ productCategory }: Props) {
-  const [selectedSubId, setSelectedSubId] = useState<string | null>(null)
+  const [selectedSubId, setSelectedSubId] = useState<string | null>(
+    productCategory.product_sub_categories?.[0]?.id ?? null,
+  )
 
   return (
     <AdminLayout>
@@ -62,6 +64,7 @@ export default function ProductCategoryDetail({ productCategory }: Props) {
         selectedSubCategory={productCategory.product_sub_categories?.find(
           (sub) => sub.id === selectedSubId,
         )}
+        categoryName={productCategory.name}
       />
     </AdminLayout>
   )
