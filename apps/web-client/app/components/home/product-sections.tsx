@@ -43,7 +43,13 @@ export default function HomeProductSections() {
     return null
   }
 
-  const sections = productSections.data ?? []
+  const sections = (productSections.data ?? []).filter(
+    (section) => Array.isArray(section.product_categories) && section.product_categories.length > 0,
+  )
+
+  if (sections.length === 0) {
+    return null
+  }
 
   const toggleSection = (key: string) => {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }))
