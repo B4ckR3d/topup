@@ -266,46 +266,78 @@ export function EditPaymentMethodModal({ paymentMethodId }: Props) {
               </div>
 
               {/* Provider Name & Provider Code */}
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <Label htmlFor="provider_name" className="mb-2">
-                    Provider Name
-                  </Label>
-                  <Select
-                    value={form.data.provider_name}
-                    onValueChange={(v) => form.setData('provider_name', v as PaymentMethodProvider)}
-                    required
-                  >
-                    <SelectTrigger className="w-full" id="provider_name">
-                      <SelectValue placeholder="Provider Name" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(PaymentMethodProvider).map((p) => (
-                        <SelectItem key={p} value={p}>
-                          {p}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {form.errors.provider_name && (
-                    <div className="text-red-500 text-xs mt-1">{form.errors.provider_name}</div>
-                  )}
+              <div className="space-y-3">
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <Label htmlFor="provider_name" className="mb-2">
+                      Provider Name
+                    </Label>
+                    <Select
+                      value={form.data.provider_name}
+                      onValueChange={(v) => {
+                        const p = v as PaymentMethodProvider
+                        form.setData((prev) => {
+                          const next = { ...prev, provider_name: p }
+                          if (p === PaymentMethodProvider.KLIKQRIS) {
+                            next.type = PaymentMethodType.QR_CODE
+                            next.provider_code = 'QRIS'
+                          } else if (p === PaymentMethodProvider.BALANCE) {
+                            next.type = PaymentMethodType.E_WALLET
+                            next.provider_code = 'BALANCE'
+                          }
+                          return next
+                        })
+                      }}
+                      required
+                    >
+                      <SelectTrigger className="w-full" id="provider_name">
+                        <SelectValue placeholder="Provider Name" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.values(PaymentMethodProvider).map((p) => (
+                          <SelectItem key={p} value={p}>
+                            {p}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {form.errors.provider_name && (
+                      <div className="text-red-500 text-xs mt-1">{form.errors.provider_name}</div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label htmlFor="provider_code">Provider Code</Label>
+                      {form.data.provider_name === PaymentMethodProvider.KLIKQRIS && (
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                          Terkunci: QRIS
+                        </span>
+                      )}
+                    </div>
+                    <Input
+                      id="provider_code"
+                      placeholder="Provider Code"
+                      value={
+                        form.data.provider_name === PaymentMethodProvider.KLIKQRIS
+                          ? 'QRIS'
+                          : form.data.provider_code
+                      }
+                      onChange={(e) => form.setData('provider_code', e.target.value)}
+                      disabled={form.data.provider_name === PaymentMethodProvider.KLIKQRIS}
+                      required
+                    />
+                    {form.errors.provider_code && (
+                      <div className="text-red-500 text-xs mt-1">{form.errors.provider_code}</div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <Label htmlFor="provider_code" className="mb-2">
-                    Provider Code
-                  </Label>
-                  <Input
-                    id="provider_code"
-                    placeholder="Provider Code"
-                    value={form.data.provider_code}
-                    onChange={(e) => form.setData('provider_code', e.target.value)}
-                    required
-                  />
-                  {form.errors.provider_code && (
-                    <div className="text-red-500 text-xs mt-1">{form.errors.provider_code}</div>
-                  )}
-                </div>
+
+                {form.data.provider_name === PaymentMethodProvider.KLIKQRIS && (
+                  <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+                    ✨ <strong>KlikQRIS Otomatis:</strong> Hanya melayani QRIS dinamis (Type
+                    otomatis <code>qr_code</code> & Kode Provider <code>QRIS</code>).
+                  </div>
+                )}
               </div>
 
               {/* Min Amount & Max Amount */}

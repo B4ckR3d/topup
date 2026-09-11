@@ -30,9 +30,202 @@ import type { CreatePaymentMethodsValidator } from '#validators/payments'
 import FileManager from '~/components/file-manager'
 import { SimpleEditor } from '~/components/tiptap/tiptap-templates/simple/simple-editor'
 
-type Props = {
-  categories: InferPageProps<PaymentsController, 'indexPaymentMethod'>['categories']
+type PaymentPreset = {
+  label: string
+  name: string
+  provider_name: PaymentMethodProvider
+  provider_code: string
+  type: PaymentMethodType
+  fee_type: PaymentMethodFeeType
+  fee_static: number
+  fee_percentage: number
+  min_amount: number
+  max_amount: number
+  category_keyword: string
 }
+
+const PAYMENT_PRESETS: PaymentPreset[] = [
+  {
+    label: '⚡ KlikQRIS - QRIS Dinamis (All Payment & E-Wallet)',
+    name: 'QRIS (Semua E-Wallet & Bank)',
+    provider_name: PaymentMethodProvider.KLIKQRIS,
+    provider_code: 'QRIS',
+    type: PaymentMethodType.QR_CODE,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 0,
+    fee_percentage: 0.7,
+    min_amount: 1000,
+    max_amount: 10000000,
+    category_keyword: 'qris',
+  },
+  {
+    label: '⚡ Tripay - QRIS Dinamis',
+    name: 'QRIS (Tripay)',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'QRIS',
+    type: PaymentMethodType.QR_CODE,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 0,
+    fee_percentage: 0.7,
+    min_amount: 1000,
+    max_amount: 5000000,
+    category_keyword: 'qris',
+  },
+  {
+    label: '⚡ Tripay - BCA Virtual Account',
+    name: 'BCA Virtual Account',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'BCAVA',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 4000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Tripay - BRI Virtual Account',
+    name: 'BRI Virtual Account',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'BRIVA',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 3000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Tripay - Mandiri Virtual Account',
+    name: 'Mandiri Virtual Account',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'MANDIRIVA',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 3500,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Tripay - BNI Virtual Account',
+    name: 'BNI Virtual Account',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'BNIVA',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 3500,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Tripay - DANA (E-Wallet)',
+    name: 'DANA',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'DANA',
+    type: PaymentMethodType.E_WALLET,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 0,
+    fee_percentage: 1.67,
+    min_amount: 1000,
+    max_amount: 10000000,
+    category_keyword: 'wallet',
+  },
+  {
+    label: '⚡ Tripay - OVO (E-Wallet)',
+    name: 'OVO',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'OVO',
+    type: PaymentMethodType.E_WALLET,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 0,
+    fee_percentage: 1.67,
+    min_amount: 1000,
+    max_amount: 10000000,
+    category_keyword: 'wallet',
+  },
+  {
+    label: '⚡ Tripay - ShopeePay (E-Wallet)',
+    name: 'ShopeePay',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'SHOPEEPAY',
+    type: PaymentMethodType.E_WALLET,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 0,
+    fee_percentage: 1.67,
+    min_amount: 1000,
+    max_amount: 10000000,
+    category_keyword: 'wallet',
+  },
+  {
+    label: '⚡ Tripay - Alfamart',
+    name: 'Alfamart',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'ALFAMART',
+    type: PaymentMethodType.CONVENIENCE_STORE,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 5000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 2500000,
+    category_keyword: 'convenience',
+  },
+  {
+    label: '⚡ Tripay - Indomaret',
+    name: 'Indomaret',
+    provider_name: PaymentMethodProvider.TRIPAY,
+    provider_code: 'INDOMARET',
+    type: PaymentMethodType.CONVENIENCE_STORE,
+    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_static: 5000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 2500000,
+    category_keyword: 'convenience',
+  },
+  {
+    label: '⚡ Saldo Akun / Wallet Member',
+    name: 'Saldo Akun',
+    provider_name: PaymentMethodProvider.BALANCE,
+    provider_code: 'BALANCE',
+    type: PaymentMethodType.E_WALLET,
+    fee_type: PaymentMethodFeeType.MERCHANT,
+    fee_static: 0,
+    fee_percentage: 0,
+    min_amount: 0,
+    max_amount: 10000000,
+    category_keyword: 'wallet',
+  },
+]
+
+const TRIPAY_CHANNELS = [
+  { label: 'BCA VA', code: 'BCAVA', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'BRI VA', code: 'BRIVA', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'Mandiri VA', code: 'MANDIRIVA', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'BNI VA', code: 'BNIVA', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'QRIS', code: 'QRIS', type: PaymentMethodType.QR_CODE },
+  { label: 'DANA', code: 'DANA', type: PaymentMethodType.E_WALLET },
+  { label: 'OVO', code: 'OVO', type: PaymentMethodType.E_WALLET },
+  { label: 'ShopeePay', code: 'SHOPEEPAY', type: PaymentMethodType.E_WALLET },
+  { label: 'Alfamart', code: 'ALFAMART', type: PaymentMethodType.CONVENIENCE_STORE },
+  { label: 'Indomaret', code: 'INDOMARET', type: PaymentMethodType.CONVENIENCE_STORE },
+]
+
+const DUITKU_CHANNELS = [
+  { label: 'BCA VA (BC)', code: 'BC', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'Mandiri VA (M2)', code: 'M2', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'Maybank VA (VA)', code: 'VA', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'Permata VA (BT)', code: 'BT', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'CIMB VA (B1)', code: 'B1', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'OVO (OV)', code: 'OV', type: PaymentMethodType.E_WALLET },
+  { label: 'DANA (DA)', code: 'DA', type: PaymentMethodType.E_WALLET },
+  { label: 'ShopeePay (SP)', code: 'SP', type: PaymentMethodType.E_WALLET },
+]
 
 export function AddPaymentMethodModal({ categories }: Props) {
   const [open, setOpen] = useState(false)
@@ -43,14 +236,14 @@ export function AddPaymentMethodModal({ categories }: Props) {
     fee_static: 0,
     fee_percentage: 0,
     fee_type: PaymentMethodFeeType.MERCHANT,
-    is_available: false,
+    is_available: true,
     is_featured: false,
     label: '',
-    provider_name: PaymentMethodProvider.TRIPAY,
-    provider_code: '',
-    min_amount: 0,
-    max_amount: 0,
-    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    provider_name: PaymentMethodProvider.KLIKQRIS,
+    provider_code: 'QRIS',
+    min_amount: 1000,
+    max_amount: 10000000,
+    type: PaymentMethodType.QR_CODE,
     allow_access: [],
     expired_in: 0,
     cut_off_start: '00:00',
@@ -59,6 +252,55 @@ export function AddPaymentMethodModal({ categories }: Props) {
     is_need_email: false,
     instruction: '',
   })
+
+  const applyPreset = (preset: PaymentPreset) => {
+    let matchedCategoryId = form.data.payment_method_category_id
+    if (preset.category_keyword && categories?.length) {
+      const found = categories.find((c) =>
+        c.name.toLowerCase().includes(preset.category_keyword.toLowerCase()),
+      )
+      if (found) matchedCategoryId = found.id
+    }
+
+    form.setData({
+      ...form.data,
+      name: preset.name,
+      provider_name: preset.provider_name,
+      provider_code: preset.provider_code,
+      type: preset.type,
+      fee_type: preset.fee_type,
+      fee_static: preset.fee_static,
+      fee_percentage: preset.fee_percentage,
+      min_amount: preset.min_amount,
+      max_amount: preset.max_amount,
+      payment_method_category_id: matchedCategoryId || form.data.payment_method_category_id,
+      is_available: true,
+    })
+  }
+
+  const handleProviderChange = (p: PaymentMethodProvider) => {
+    form.setData((prev) => {
+      const next = { ...prev, provider_name: p }
+      if (p === PaymentMethodProvider.KLIKQRIS) {
+        next.type = PaymentMethodType.QR_CODE
+        next.provider_code = 'QRIS'
+        if (!next.name) next.name = 'QRIS (Semua E-Wallet & Bank)'
+        const qrisCat = categories?.find(
+          (c) => c.name.toLowerCase().includes('qris') || c.name.toLowerCase().includes('wallet'),
+        )
+        if (qrisCat && !next.payment_method_category_id) {
+          next.payment_method_category_id = qrisCat.id
+        }
+      } else if (p === PaymentMethodProvider.BALANCE) {
+        next.type = PaymentMethodType.E_WALLET
+        next.provider_code = 'BALANCE'
+        if (!next.name) next.name = 'Saldo Akun'
+        next.fee_static = 0
+        next.fee_percentage = 0
+      }
+      return next
+    })
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -70,6 +312,8 @@ export function AddPaymentMethodModal({ categories }: Props) {
     })
   }
 
+  const isKlikQris = form.data.provider_name === PaymentMethodProvider.KLIKQRIS
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -80,6 +324,35 @@ export function AddPaymentMethodModal({ categories }: Props) {
           <DialogTitle>Add Payment Method</DialogTitle>
         </DialogHeader>
         <form className="space-y-4 max-h-96 overflow-y-auto">
+          {/* Quick Presets */}
+          <div className="rounded-xl border border-primary/25 bg-primary/5 p-3.5 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                <span>⚡ Quick Preset Siap Pakai (1-Klik Otomatis)</span>
+              </Label>
+              <span className="text-[11px] text-muted-foreground">
+                Otomatis isi nama, kode, tipe & fee
+              </span>
+            </div>
+            <Select
+              onValueChange={(val) => {
+                const p = PAYMENT_PRESETS.find((preset) => preset.label === val)
+                if (p) applyPreset(p)
+              }}
+            >
+              <SelectTrigger className="w-full bg-background text-xs h-9">
+                <SelectValue placeholder="Pilih preset (KlikQRIS, Tripay VA, E-Wallet, Saldo, dll)..." />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_PRESETS.map((p) => (
+                  <SelectItem key={p.label} value={p.label} className="text-xs">
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
             <Label htmlFor="image_id" className="mb-2">
               Image
@@ -194,12 +467,18 @@ export function AddPaymentMethodModal({ categories }: Props) {
               )}
             </div>
             <div className="flex-1">
-              <Label htmlFor="type" className="mb-2">
-                Type
-              </Label>
+              <div className="flex items-center justify-between mb-2">
+                <Label htmlFor="type">Type</Label>
+                {isKlikQris && (
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                    Khusus QR Code
+                  </span>
+                )}
+              </div>
               <Select
-                value={form.data.type}
+                value={isKlikQris ? PaymentMethodType.QR_CODE : form.data.type}
                 onValueChange={(v) => form.setData('type', v as PaymentMethodType)}
+                disabled={isKlikQris}
                 required
               >
                 <SelectTrigger className="w-full" id="type">
@@ -220,46 +499,125 @@ export function AddPaymentMethodModal({ categories }: Props) {
           </div>
 
           {/* Provider Name & Provider Code */}
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Label htmlFor="provider_name" className="mb-2">
-                Provider Name
-              </Label>
-              <Select
-                value={form.data.provider_name}
-                onValueChange={(v) => form.setData('provider_name', v as PaymentMethodProvider)}
-                required
-              >
-                <SelectTrigger className="w-full" id="provider_name">
-                  <SelectValue placeholder="Provider Name" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(PaymentMethodProvider).map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
-                    </SelectItem>
+          <div className="space-y-3">
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <Label htmlFor="provider_name" className="mb-2">
+                  Provider Name
+                </Label>
+                <Select
+                  value={form.data.provider_name}
+                  onValueChange={(v) => handleProviderChange(v as PaymentMethodProvider)}
+                  required
+                >
+                  <SelectTrigger className="w-full" id="provider_name">
+                    <SelectValue placeholder="Provider Name" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(PaymentMethodProvider).map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form.errors.provider_name && (
+                  <div className="text-red-500 text-xs mt-1">{form.errors.provider_name}</div>
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="provider_code">Provider Code</Label>
+                  {isKlikQris && (
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                      Terkunci: QRIS
+                    </span>
+                  )}
+                </div>
+                <Input
+                  id="provider_code"
+                  placeholder="Provider Code"
+                  value={isKlikQris ? 'QRIS' : form.data.provider_code}
+                  onChange={(e) => form.setData('provider_code', e.target.value)}
+                  disabled={isKlikQris}
+                  required
+                />
+                {form.errors.provider_code && (
+                  <div className="text-red-500 text-xs mt-1">{form.errors.provider_code}</div>
+                )}
+              </div>
+            </div>
+
+            {/* Smart Hints & Shortcut Pills */}
+            {isKlikQris && (
+              <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+                ✨ <strong>KlikQRIS Otomatis:</strong> KlikQRIS hanya melayani pembayaran via QRIS
+                dinamis. Tipe otomatis diset ke <code>qr_code</code> dan Provider Code otomatis
+                diset ke <code>QRIS</code>.
+              </div>
+            )}
+
+            {form.data.provider_name === PaymentMethodProvider.TRIPAY && (
+              <div className="space-y-1.5 rounded-lg border border-border bg-muted/40 p-2.5">
+                <p className="text-[11px] font-medium text-muted-foreground">
+                  Pilih Shortcut Channel Tripay (Klik untuk auto-fill):
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {TRIPAY_CHANNELS.map((ch) => (
+                    <button
+                      key={ch.code}
+                      type="button"
+                      onClick={() => {
+                        form.setData((prev) => ({
+                          ...prev,
+                          provider_code: ch.code,
+                          type: ch.type,
+                          name: prev.name ? prev.name : ch.label,
+                        }))
+                      }}
+                      className={`text-xs px-2 py-1 rounded transition-colors border ${
+                        form.data.provider_code === ch.code
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background hover:bg-secondary border-border text-foreground'
+                      }`}
+                    >
+                      {ch.label} ({ch.code})
+                    </button>
                   ))}
-                </SelectContent>
-              </Select>
-              {form.errors.provider_name && (
-                <div className="text-red-500 text-xs mt-1">{form.errors.provider_name}</div>
-              )}
-            </div>
-            <div className="flex-1">
-              <Label htmlFor="provider_code" className="mb-2">
-                Provider Code
-              </Label>
-              <Input
-                id="provider_code"
-                placeholder="Provider Code"
-                value={form.data.provider_code}
-                onChange={(e) => form.setData('provider_code', e.target.value)}
-                required
-              />
-              {form.errors.provider_code && (
-                <div className="text-red-500 text-xs mt-1">{form.errors.provider_code}</div>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
+
+            {form.data.provider_name === PaymentMethodProvider.DUITKU && (
+              <div className="space-y-1.5 rounded-lg border border-border bg-muted/40 p-2.5">
+                <p className="text-[11px] font-medium text-muted-foreground">
+                  Pilih Shortcut Channel Duitku (Klik untuk auto-fill):
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {DUITKU_CHANNELS.map((ch) => (
+                    <button
+                      key={ch.code}
+                      type="button"
+                      onClick={() => {
+                        form.setData((prev) => ({
+                          ...prev,
+                          provider_code: ch.code,
+                          type: ch.type,
+                          name: prev.name ? prev.name : ch.label,
+                        }))
+                      }}
+                      className={`text-xs px-2 py-1 rounded transition-colors border ${
+                        form.data.provider_code === ch.code
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-background hover:bg-secondary border-border text-foreground'
+                      }`}
+                    >
+                      {ch.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Min Amount & Max Amount */}

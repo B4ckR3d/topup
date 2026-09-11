@@ -17,6 +17,124 @@ import type { CreateProductCategoryValidator } from '#validators/product'
 import FileManager from '~/components/file-manager'
 import AdminLayout from '~/components/layout/admin-layout'
 
+type GamePreset = {
+  label: string
+  name: string
+  sub_name: string
+  publisher: string
+  description: string
+  label_tag: string
+  seo_title: string
+  seo_description: string
+}
+
+const GAME_PRESETS: GamePreset[] = [
+  {
+    label: '⚡ Mobile Legends: Bang Bang (Moonton)',
+    name: 'Mobile Legends: Bang Bang',
+    sub_name: 'Diamonds & Weekly Diamond Pass',
+    publisher: 'Moonton',
+    description:
+      'Top up Diamond Mobile Legends resmi dan terpercaya. Proses instan 24 jam dengan metode pembayaran terlengkap.',
+    label_tag: 'HOT',
+    seo_title: 'Top Up Mobile Legends Murah & Cepat - Umbreon Store',
+    seo_description:
+      'Beli diamond Mobile Legends resmi terpercaya. Proses instan 24 jam dengan pembayaran QRIS, E-Wallet, dan Virtual Account.',
+  },
+  {
+    label: '⚡ Free Fire (Garena)',
+    name: 'Free Fire',
+    sub_name: 'Diamonds & Membership',
+    publisher: 'Garena',
+    description:
+      'Top up Diamond Free Fire resmi termurah. Proses pengisian cepat dan otomatis 24 jam.',
+    label_tag: 'POPULAR',
+    seo_title: 'Top Up Free Fire Murah & Cepat - Umbreon Store',
+    seo_description: 'Beli diamond Free Fire resmi murah, cepat, dan aman hanya di Umbreon Store.',
+  },
+  {
+    label: '⚡ PUBG Mobile (Tencent Games)',
+    name: 'PUBG Mobile',
+    sub_name: 'Unknown Cash (UC)',
+    publisher: 'Tencent Games',
+    description: 'Top up UC PUBG Mobile resmi. Proses otomatis masuk ke akun dalam hitungan detik.',
+    label_tag: 'BEST SELLER',
+    seo_title: 'Top Up UC PUBG Mobile Murah & Resmi - Umbreon Store',
+    seo_description: 'Top up UC PUBG Mobile termurah dan instan 24 jam di Umbreon Store.',
+  },
+  {
+    label: '⚡ Genshin Impact (HoYoverse)',
+    name: 'Genshin Impact',
+    sub_name: 'Genesis Crystals & Welkin Moon',
+    publisher: 'HoYoverse',
+    description:
+      'Top up Genesis Crystals & Blessing of the Welkin Moon Genshin Impact resmi via UID.',
+    label_tag: 'RESMI',
+    seo_title: 'Top Up Genshin Impact Genesis Crystals - Umbreon Store',
+    seo_description: 'Beli Genesis Crystals Genshin Impact murah via UID resmi 24 jam.',
+  },
+  {
+    label: '⚡ Honor of Kings (Level Infinite)',
+    name: 'Honor of Kings',
+    sub_name: 'Tokens & Weekly Pass',
+    publisher: 'Level Infinite',
+    description: 'Top up Tokens Honor of Kings resmi, cepat dan terpercaya.',
+    label_tag: 'NEW',
+    seo_title: 'Top Up Honor of Kings Tokens Murah - Umbreon Store',
+    seo_description: 'Top up Tokens Honor of Kings instan 24 jam di Umbreon Store.',
+  },
+  {
+    label: '⚡ Valorant (Riot Games)',
+    name: 'Valorant',
+    sub_name: 'Valorant Points (VP)',
+    publisher: 'Riot Games',
+    description: 'Top up Points Valorant resmi Riot Games untuk beli Battle Pass dan Skin.',
+    label_tag: 'HOT',
+    seo_title: 'Top Up Valorant Points (VP) Murah - Umbreon Store',
+    seo_description: 'Beli Valorant Points (VP) resmi dan instan hanya di Umbreon Store.',
+  },
+  {
+    label: '⚡ Honkai: Star Rail (HoYoverse)',
+    name: 'Honkai: Star Rail',
+    sub_name: 'Oneiric Shards & Express Supply Pass',
+    publisher: 'HoYoverse',
+    description: 'Top up Oneiric Shards & Express Supply Pass Honkai: Star Rail resmi via UID.',
+    label_tag: 'RESMI',
+    seo_title: 'Top Up Honkai Star Rail Murah - Umbreon Store',
+    seo_description: 'Top up Oneiric Shards Honkai Star Rail resmi instan 24 jam.',
+  },
+  {
+    label: '⚡ Roblox (Roblox Corporation)',
+    name: 'Roblox',
+    sub_name: 'Robux & Gift Card',
+    publisher: 'Roblox Corporation',
+    description: 'Beli Robux Roblox resmi dan instan dengan harga termurah.',
+    label_tag: 'POPULAR',
+    seo_title: 'Beli Robux Roblox Murah & Instan - Umbreon Store',
+    seo_description: 'Beli Robux resmi dan terpercaya untuk game Roblox.',
+  },
+  {
+    label: '⚡ Call of Duty Mobile (Garena)',
+    name: 'Call of Duty Mobile',
+    sub_name: 'CP Points',
+    publisher: 'Garena',
+    description: 'Top up CP CODM resmi Garena langsung masuk ke akun game.',
+    label_tag: 'PROMO',
+    seo_title: 'Top Up CP CODM Murah - Umbreon Store',
+    seo_description: 'Beli CP Call of Duty Mobile resmi dan terpercaya.',
+  },
+  {
+    label: '⚡ Point Blank (Zepetto)',
+    name: 'Point Blank',
+    sub_name: 'PB Cash',
+    publisher: 'Zepetto',
+    description: 'Top up PB Cash Point Blank resmi Zepetto untuk beli senjata dan item favorit.',
+    label_tag: 'PROMO',
+    seo_title: 'Top Up PB Cash Point Blank Murah - Umbreon Store',
+    seo_description: 'Beli PB Cash Zepetto resmi instan 24 jam.',
+  },
+]
+
 export default function CreateProductCategory() {
   const { data, errors, setData, post, processing } = useForm<CreateProductCategoryValidator>(
     'createGame',
@@ -46,6 +164,21 @@ export default function CreateProductCategory() {
     },
   )
 
+  const applyGamePreset = (preset: GamePreset) => {
+    setData((prev) => ({
+      ...prev,
+      name: preset.name,
+      sub_name: preset.sub_name,
+      publisher: preset.publisher,
+      description: preset.description,
+      label: preset.label_tag,
+      is_seo_enabled: true,
+      seo_title: preset.seo_title,
+      seo_description: preset.seo_description,
+    }))
+    toast.success(`Data game ${preset.name} berhasil diisi otomatis!`)
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     post('/admin/product-categories/game/create', {
@@ -64,8 +197,64 @@ export default function CreateProductCategory() {
     <AdminLayout>
       <h2 className="mt-4 text-2xl font-semibold text-foreground">Create Product Category</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Lengkapi data produk dengan rapi untuk memudahkan publikasi dan maintenance.
+        Lengkapi data kategori game untuk publikasi ke storefront pelanggan.
       </p>
+
+      {/* Auto-Fill Game & H2H Flow Guidance */}
+      <div className="mt-6 rounded-xl border border-primary/25 bg-primary/5 p-4 space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <span>⚡ Quick Grab / Auto-Fill Game dari Provider</span>
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Pilih game untuk mengisi Nama, Sub Name, Publisher, Deskripsi & SEO secara otomatis
+              tanpa ketik manual.
+            </p>
+          </div>
+        </div>
+
+        <Select
+          onValueChange={(val) => {
+            const preset = GAME_PRESETS.find((p) => p.name === val)
+            if (preset) applyGamePreset(preset)
+          }}
+        >
+          <SelectTrigger className="w-full bg-background text-xs h-9">
+            <SelectValue placeholder="Pilih Game (Mobile Legends, Free Fire, Genshin, Valorant, dll)..." />
+          </SelectTrigger>
+          <SelectContent>
+            {GAME_PRESETS.map((p) => (
+              <SelectItem key={p.name} value={p.name} className="text-xs">
+                {p.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-2.5 text-xs text-blue-700 dark:text-blue-300 space-y-1">
+          <p className="font-semibold flex items-center gap-1">
+            <span>ℹ️ Cara Menambahkan Produk/Item H2H Otomatis:</span>
+          </p>
+          <p>
+            Form di halaman ini adalah untuk membuat <strong>Wadah Kategori Game</strong>. Setelah
+            menyimpan kategori ini:
+          </p>
+          <ol className="list-decimal list-inside space-y-0.5 pl-1 text-[11px] opacity-90">
+            <li>
+              Masuk ke <strong>Detail Kategori</strong> &rarr; Buat <strong>Sub-Kategori</strong>{' '}
+              (contoh: <em>Diamonds</em>).
+            </li>
+            <li>
+              Di dalam Sub-Kategori, klik tombol awan <strong>"Add from Provider"</strong>.
+            </li>
+            <li>
+              Pilih provider (<strong>Digiflazz / VIP-Reseller</strong>), tentukan margin
+              keuntungan, dan centang produk untuk diimpor otomatis secara massal!
+            </li>
+          </ol>
+        </div>
+      </div>
 
       <form
         className="mt-6 grid w-full max-w-6xl grid-cols-1 gap-5 md:grid-cols-2"
