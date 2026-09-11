@@ -23,6 +23,7 @@ import {
 import { useState } from 'react'
 import type PaymentsController from '#controllers/payments_controller'
 import AdminLayout from '~/components/layout/admin-layout'
+import { GatewayStatusDialog } from '~/components/sidebar/gateway-status-dialog'
 import { formatDate, formatPrice } from '~/utils/index'
 import { AddPaymentMethodModal } from './add-modal'
 import { EditPaymentMethodModal } from './edit-modal'
@@ -129,9 +130,18 @@ export default function PaymentMethodsIndex(props: Props) {
 
   return (
     <AdminLayout>
-      <div className="flex justify-between mt-5 mb-2">
-        <h1 className="text-2xl font-bold">Payment Methods</h1>
-        <AddPaymentMethodModal categories={props.categories} />
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mt-5 mb-4">
+        <div>
+          <h1 className="text-2xl font-bold">Payment Methods</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Kelola metode pembayaran customer (KlikQRIS, Duitku, TriPay, dll) untuk Order dan
+            Deposit.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <GatewayStatusDialog />
+          <AddPaymentMethodModal categories={props.categories} />
+        </div>
       </div>
       <form className="flex gap-2" onSubmit={handleSearch}>
         <Select

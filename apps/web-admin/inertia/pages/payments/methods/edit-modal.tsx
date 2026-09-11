@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@umbreon/ui/components/ui/select'
 import { type FormEvent, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import type { UpdatePaymentMethodsValidator } from '#validators/payments'
 import FileManager from '~/components/file-manager'
 import { SimpleEditor } from '~/components/tiptap/tiptap-templates/simple/simple-editor'
@@ -34,14 +35,53 @@ type Props = {
   paymentMethodId: string
 }
 
+const TRIPAY_CHANNELS = [
+  { code: 'QRIS', label: 'Tripay QRIS', type: PaymentMethodType.QR_CODE },
+  { code: 'BCAVA', label: 'BCA Virtual Account', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'BNIVA', label: 'BNI Virtual Account', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'BRIVA', label: 'BRI Virtual Account', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'MANDIRIVA', label: 'Mandiri Virtual Account', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'PERMATAVA', label: 'Permata Virtual Account', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'CIMBVA', label: 'CIMB Niaga VA', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'BSIVA', label: 'BSI Virtual Account', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'OVO', label: 'OVO (Tripay)', type: PaymentMethodType.E_WALLET },
+  { code: 'SHOPEEPAY', label: 'ShopeePay (Tripay)', type: PaymentMethodType.E_WALLET },
+  { code: 'ALFAMART', label: 'Alfamart', type: PaymentMethodType.CONVENIENCE_STORE },
+  { code: 'INDOMARET', label: 'Indomaret', type: PaymentMethodType.CONVENIENCE_STORE },
+]
+
+const DUITKU_CHANNELS = [
+  { code: 'SP', label: 'Duitku QRIS (ShopeePay / Semua)', type: PaymentMethodType.QR_CODE },
+  { code: 'BC', label: 'BCA Virtual Account (Duitku)', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  {
+    code: 'M2',
+    label: 'Mandiri Virtual Account (Duitku)',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+  },
+  { code: 'I1', label: 'BNI Virtual Account (Duitku)', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'BR', label: 'BRI Virtual Account (Duitku)', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'BT', label: 'Permata VA (Duitku)', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'B1', label: 'CIMB Niaga VA (Duitku)', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { code: 'DA', label: 'DANA (Duitku E-Wallet)', type: PaymentMethodType.E_WALLET },
+  { code: 'OV', label: 'OVO (Duitku E-Wallet)', type: PaymentMethodType.E_WALLET },
+  { code: 'SA', label: 'ShopeePay (Duitku E-Wallet)', type: PaymentMethodType.E_WALLET },
+  { code: 'A1', label: 'Alfamart (Duitku Retail)', type: PaymentMethodType.CONVENIENCE_STORE },
+  { code: 'IR', label: 'Indomaret (Duitku Retail)', type: PaymentMethodType.CONVENIENCE_STORE },
+]
+
 export function EditPaymentMethodModal({ paymentMethodId }: Props) {
   const [open, setOpen] = useState(false)
+  const [gatewayStatus, setGatewayStatus] = useState<
+    Record<string, { status: string; message: string }>
+  >({})
+  const [isLoadingGateway, setIsLoadingGateway] = useState(false)
+
   const form = useForm<UpdatePaymentMethodsValidator>({
     name: '',
     image_id: '',
     fee_static: 0,
     fee_percentage: 0,
-    fee_type: PaymentMethodFeeType.MERCHANT,
+    fee_type: PaymentMethodFeeType.BUYER,
     is_available: false,
     is_featured: false,
     label: '',
@@ -60,10 +100,44 @@ export function EditPaymentMethodModal({ paymentMethodId }: Props) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+
+    if (!form.data.name || !form.data.name.trim()) {
+      toast.error('Nama Metode Pembayaran wajib diisi!')
+      return
+    }
+
+    if (!form.data.provider_code || !form.data.provider_code.trim()) {
+      toast.error('Provider Code wajib diisi!')
+      return
+    }
+
+    if (
+      form.data.max_amount !== undefined &&
+      form.data.min_amount !== undefined &&
+      form.data.max_amount > 0 &&
+      form.data.min_amount > form.data.max_amount
+    ) {
+      toast.error('Minimal pembayaran tidak boleh lebih besar dari Maksimal pembayaran!')
+      return
+    }
+
     form.patch(`/admin/payments/methods/${paymentMethodId}`, {
       onSuccess: () => {
+        toast.success('Metode pembayaran berhasil diperbarui!')
         setOpen(false)
         form.reset()
+      },
+      onError: (errors) => {
+        console.error('[EditPaymentMethodModal] Errors:', errors)
+        const errList = Object.entries(errors)
+          .map(([key, msg]) => `${key}: ${msg}`)
+          .filter(Boolean)
+
+        if (errList.length > 0) {
+          toast.error(`Gagal menyimpan perubahan:\n${errList.join('\n')}`, { duration: 6000 })
+        } else {
+          toast.error('Gagal memperbarui metode pembayaran. Mohon periksa kelengkapan form.')
+        }
       },
     })
   }
@@ -103,7 +177,39 @@ export function EditPaymentMethodModal({ paymentMethodId }: Props) {
   useEffect(() => {
     if (!open) return
     getPaymentMethod.mutate()
+
+    setIsLoadingGateway(true)
+    apiClient
+      .get<{ success: boolean; gateways: Array<{ id: string; status: string; message: string }> }>(
+        '/admin/gateways/test-all',
+      )
+      .then((res) => {
+        if (res.data?.gateways) {
+          const map: Record<string, { status: string; message: string }> = {}
+          res.data.gateways.forEach((g) => {
+            map[g.id] = { status: g.status, message: g.message }
+          })
+          setGatewayStatus(map)
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsLoadingGateway(false)
+      })
   }, [open, paymentMethodId])
+
+  const getProviderStatus = () => {
+    const p = form.data.provider_name
+    if (p === PaymentMethodProvider.BALANCE) {
+      return { status: 'connected', message: 'Sistem Saldo Internal (Otomatis & Siap Dipakai)' }
+    }
+    if (p === PaymentMethodProvider.MANUAL) {
+      return { status: 'connected', message: 'Metode Manual (Konfirmasi Admin)' }
+    }
+    return p ? gatewayStatus[p] : undefined
+  }
+  const currentProviderStatus = getProviderStatus()
+  const isKlikQris = form.data.provider_name === PaymentMethodProvider.KLIKQRIS
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -114,7 +220,7 @@ export function EditPaymentMethodModal({ paymentMethodId }: Props) {
       </DialogTrigger>
       <DialogContent className="lg:min-w-3/5 ">
         <DialogHeader>
-          <DialogTitle>Add Payment Method</DialogTitle>
+          <DialogTitle>Edit Payment Method</DialogTitle>
         </DialogHeader>
         {getPaymentMethod.isPending && <p className="text-center">Loading....</p>}
         {getPaymentMethod.isError && (
@@ -332,10 +438,127 @@ export function EditPaymentMethodModal({ paymentMethodId }: Props) {
                   </div>
                 </div>
 
-                {form.data.provider_name === PaymentMethodProvider.KLIKQRIS && (
+                {/* Live Gateway Connectivity Status */}
+                {isLoadingGateway ? (
+                  <div className="rounded-lg border border-border/60 bg-muted/40 px-3 py-2.5 text-xs flex items-center gap-2 animate-pulse text-muted-foreground">
+                    <span className="h-2 w-2 rounded-full bg-primary/60 animate-ping" />
+                    <span>Memeriksa status koneksi gateway {form.data.provider_name}...</span>
+                  </div>
+                ) : currentProviderStatus ? (
+                  <div
+                    className={`rounded-lg px-3 py-2.5 text-xs flex items-center justify-between border transition-all ${
+                      currentProviderStatus.status === 'connected'
+                        ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                        : currentProviderStatus.status === 'not_configured'
+                          ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                          : 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-base">
+                        {currentProviderStatus.status === 'connected'
+                          ? '🟢'
+                          : currentProviderStatus.status === 'not_configured'
+                            ? '🟡'
+                            : '🔴'}
+                      </span>
+                      <div>
+                        <div className="font-semibold flex items-center gap-1.5">
+                          <span>Gateway {form.data.provider_name?.toUpperCase()}:</span>
+                          <span>
+                            {currentProviderStatus.status === 'connected'
+                              ? 'Terkoneksi & Siap Pakai'
+                              : currentProviderStatus.status === 'not_configured'
+                                ? 'Belum Dikonfigurasi di .env'
+                                : 'Error / Gangguan'}
+                          </span>
+                        </div>
+                        <div className="text-[11px] opacity-85 mt-0.5">
+                          {currentProviderStatus.message}
+                        </div>
+                      </div>
+                    </div>
+                    <span
+                      className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full border ${
+                        currentProviderStatus.status === 'connected'
+                          ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-800 dark:text-emerald-200'
+                          : currentProviderStatus.status === 'not_configured'
+                            ? 'border-amber-500/40 bg-amber-500/20 text-amber-800 dark:text-amber-200'
+                            : 'border-red-500/40 bg-red-500/20 text-red-800 dark:text-red-200'
+                      }`}
+                    >
+                      {currentProviderStatus.status}
+                    </span>
+                  </div>
+                ) : null}
+
+                {/* Smart Hints & Shortcut Pills */}
+                {isKlikQris && (
                   <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
                     ✨ <strong>KlikQRIS Otomatis:</strong> Hanya melayani QRIS dinamis (Type
                     otomatis <code>qr_code</code> & Kode Provider <code>QRIS</code>).
+                  </div>
+                )}
+
+                {form.data.provider_name === PaymentMethodProvider.TRIPAY && (
+                  <div className="space-y-1.5 rounded-lg border border-border bg-muted/40 p-2.5">
+                    <p className="text-[11px] font-medium text-muted-foreground">
+                      Pilih Shortcut Channel Tripay (Klik untuk auto-fill):
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {TRIPAY_CHANNELS.map((ch) => (
+                        <button
+                          key={ch.code}
+                          type="button"
+                          onClick={() => {
+                            form.setData((prev) => ({
+                              ...prev,
+                              provider_code: ch.code,
+                              type: ch.type,
+                              name: prev.name ? prev.name : ch.label,
+                            }))
+                          }}
+                          className={`text-xs px-2 py-1 rounded transition-colors border ${
+                            form.data.provider_code === ch.code
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-background hover:bg-secondary border-border text-foreground'
+                          }`}
+                        >
+                          {ch.label} ({ch.code})
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {form.data.provider_name === PaymentMethodProvider.DUITKU && (
+                  <div className="space-y-1.5 rounded-lg border border-border bg-muted/40 p-2.5">
+                    <p className="text-[11px] font-medium text-muted-foreground">
+                      Pilih Shortcut Channel Duitku (Klik untuk auto-fill):
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {DUITKU_CHANNELS.map((ch) => (
+                        <button
+                          key={ch.code}
+                          type="button"
+                          onClick={() => {
+                            form.setData((prev) => ({
+                              ...prev,
+                              provider_code: ch.code,
+                              type: ch.type,
+                              name: prev.name ? prev.name : ch.label,
+                            }))
+                          }}
+                          className={`text-xs px-2 py-1 rounded transition-colors border ${
+                            form.data.provider_code === ch.code
+                              ? 'bg-primary text-primary-foreground border-primary'
+                              : 'bg-background hover:bg-secondary border-border text-foreground'
+                          }`}
+                        >
+                          {ch.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

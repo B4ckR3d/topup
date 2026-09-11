@@ -1,6 +1,6 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { and, count, desc, eq, ilike, type SQL } from '@umbreon/db'
-import { tb } from '@umbreon/db/types'
+import { PaymentMethodAllowAccess, tb } from '@umbreon/db/types'
 import vine from '@vinejs/vine'
 import { db } from '#database/db'
 import {
@@ -157,20 +157,24 @@ export default class PaymentsController {
       },
     )
 
-    const image = await db.query.fileManager.findFirst({
-      where: eq(tb.fileManager.id, imageId),
-    })
-
-    if (!image) {
-      ctx.session.flashErrors({
-        error: 'Image not found',
+    let imageUrl = '/images/qris.png'
+    if (imageId) {
+      const image = await db.query.fileManager.findFirst({
+        where: eq(tb.fileManager.id, imageId),
       })
-      return ctx.response.redirect().back()
+      if (image) {
+        imageUrl = image.url
+      }
     }
 
     await db.insert(tb.paymentMethods).values({
       ...data,
-      image_url: image.url,
+      allow_access: data.allow_access?.length
+        ? data.allow_access
+        : [PaymentMethodAllowAccess.ORDER, PaymentMethodAllowAccess.DEPOSIT],
+      expired_in: data.expired_in ?? 3600,
+      instruction: data.instruction || '<p>Silakan selesaikan pembayaran sesuai petunjuk.</p>',
+      image_url: imageUrl,
     })
 
     ctx.session.flash('success', 'Payment method created successfully.')

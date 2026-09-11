@@ -24,11 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@umbreon/ui/components/ui/select'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import type PaymentsController from '#controllers/payments_controller'
 import type { CreatePaymentMethodsValidator } from '#validators/payments'
 import FileManager from '~/components/file-manager'
 import { SimpleEditor } from '~/components/tiptap/tiptap-templates/simple/simple-editor'
+import { apiClient } from '~/utils/axios'
 
 type PaymentPreset = {
   label: string
@@ -45,26 +47,29 @@ type PaymentPreset = {
 }
 
 const PAYMENT_PRESETS: PaymentPreset[] = [
+  // KlikQRIS
   {
     label: '⚡ KlikQRIS - QRIS Dinamis (All Payment & E-Wallet)',
     name: 'QRIS (Semua E-Wallet & Bank)',
     provider_name: PaymentMethodProvider.KLIKQRIS,
     provider_code: 'QRIS',
     type: PaymentMethodType.QR_CODE,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 0,
     fee_percentage: 0.7,
     min_amount: 1000,
     max_amount: 10000000,
     category_keyword: 'qris',
   },
+
+  // Tripay Presets
   {
     label: '⚡ Tripay - QRIS Dinamis',
     name: 'QRIS (Tripay)',
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'QRIS',
     type: PaymentMethodType.QR_CODE,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 0,
     fee_percentage: 0.7,
     min_amount: 1000,
@@ -77,7 +82,7 @@ const PAYMENT_PRESETS: PaymentPreset[] = [
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'BCAVA',
     type: PaymentMethodType.VIRTUAL_ACCOUNT,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 4000,
     fee_percentage: 0,
     min_amount: 10000,
@@ -90,7 +95,7 @@ const PAYMENT_PRESETS: PaymentPreset[] = [
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'BRIVA',
     type: PaymentMethodType.VIRTUAL_ACCOUNT,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 3000,
     fee_percentage: 0,
     min_amount: 10000,
@@ -103,7 +108,7 @@ const PAYMENT_PRESETS: PaymentPreset[] = [
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'MANDIRIVA',
     type: PaymentMethodType.VIRTUAL_ACCOUNT,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 3500,
     fee_percentage: 0,
     min_amount: 10000,
@@ -116,7 +121,7 @@ const PAYMENT_PRESETS: PaymentPreset[] = [
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'BNIVA',
     type: PaymentMethodType.VIRTUAL_ACCOUNT,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 3500,
     fee_percentage: 0,
     min_amount: 10000,
@@ -129,7 +134,7 @@ const PAYMENT_PRESETS: PaymentPreset[] = [
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'DANA',
     type: PaymentMethodType.E_WALLET,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 0,
     fee_percentage: 1.67,
     min_amount: 1000,
@@ -142,7 +147,7 @@ const PAYMENT_PRESETS: PaymentPreset[] = [
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'OVO',
     type: PaymentMethodType.E_WALLET,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 0,
     fee_percentage: 1.67,
     min_amount: 1000,
@@ -155,7 +160,7 @@ const PAYMENT_PRESETS: PaymentPreset[] = [
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'SHOPEEPAY',
     type: PaymentMethodType.E_WALLET,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 0,
     fee_percentage: 1.67,
     min_amount: 1000,
@@ -168,7 +173,7 @@ const PAYMENT_PRESETS: PaymentPreset[] = [
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'ALFAMART',
     type: PaymentMethodType.CONVENIENCE_STORE,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 5000,
     fee_percentage: 0,
     min_amount: 10000,
@@ -181,13 +186,173 @@ const PAYMENT_PRESETS: PaymentPreset[] = [
     provider_name: PaymentMethodProvider.TRIPAY,
     provider_code: 'INDOMARET',
     type: PaymentMethodType.CONVENIENCE_STORE,
-    fee_type: PaymentMethodFeeType.CUSTOMER,
+    fee_type: PaymentMethodFeeType.BUYER,
     fee_static: 5000,
     fee_percentage: 0,
     min_amount: 10000,
     max_amount: 2500000,
     category_keyword: 'convenience',
   },
+
+  // Duitku Presets
+  {
+    label: '⚡ Duitku - QRIS Dinamis (ShopeePay/All QRIS)',
+    name: 'QRIS (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'SP',
+    type: PaymentMethodType.QR_CODE,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 0,
+    fee_percentage: 0.7,
+    min_amount: 1000,
+    max_amount: 10000000,
+    category_keyword: 'qris',
+  },
+  {
+    label: '⚡ Duitku - BCA Virtual Account',
+    name: 'BCA Virtual Account (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'BC',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 4000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Duitku - Mandiri Virtual Account',
+    name: 'Mandiri Virtual Account (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'M2',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 3500,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Duitku - BNI Virtual Account',
+    name: 'BNI Virtual Account (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'I1',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 3000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Duitku - BRI Virtual Account',
+    name: 'BRI Virtual Account (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'BR',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 3000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Duitku - Permata Virtual Account',
+    name: 'Permata Virtual Account (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'BT',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 3000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Duitku - CIMB Niaga Virtual Account',
+    name: 'CIMB Niaga VA (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'B1',
+    type: PaymentMethodType.VIRTUAL_ACCOUNT,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 3000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 10000000,
+    category_keyword: 'virtual',
+  },
+  {
+    label: '⚡ Duitku - DANA (E-Wallet)',
+    name: 'DANA (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'DA',
+    type: PaymentMethodType.E_WALLET,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 0,
+    fee_percentage: 1.67,
+    min_amount: 1000,
+    max_amount: 10000000,
+    category_keyword: 'wallet',
+  },
+  {
+    label: '⚡ Duitku - OVO (E-Wallet)',
+    name: 'OVO (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'OV',
+    type: PaymentMethodType.E_WALLET,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 0,
+    fee_percentage: 1.67,
+    min_amount: 1000,
+    max_amount: 10000000,
+    category_keyword: 'wallet',
+  },
+  {
+    label: '⚡ Duitku - ShopeePay (E-Wallet)',
+    name: 'ShopeePay (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'SA',
+    type: PaymentMethodType.E_WALLET,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 0,
+    fee_percentage: 1.67,
+    min_amount: 1000,
+    max_amount: 10000000,
+    category_keyword: 'wallet',
+  },
+  {
+    label: '⚡ Duitku - Alfamart',
+    name: 'Alfamart (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'A1',
+    type: PaymentMethodType.CONVENIENCE_STORE,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 5000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 2500000,
+    category_keyword: 'convenience',
+  },
+  {
+    label: '⚡ Duitku - Indomaret',
+    name: 'Indomaret (Duitku)',
+    provider_name: PaymentMethodProvider.DUITKU,
+    provider_code: 'IR',
+    type: PaymentMethodType.CONVENIENCE_STORE,
+    fee_type: PaymentMethodFeeType.BUYER,
+    fee_static: 5000,
+    fee_percentage: 0,
+    min_amount: 10000,
+    max_amount: 2500000,
+    category_keyword: 'convenience',
+  },
+
+  // Saldo Akun Member
   {
     label: '⚡ Saldo Akun / Wallet Member',
     name: 'Saldo Akun',
@@ -217,25 +382,34 @@ const TRIPAY_CHANNELS = [
 ]
 
 const DUITKU_CHANNELS = [
+  { label: 'QRIS (SP)', code: 'SP', type: PaymentMethodType.QR_CODE },
   { label: 'BCA VA (BC)', code: 'BC', type: PaymentMethodType.VIRTUAL_ACCOUNT },
   { label: 'Mandiri VA (M2)', code: 'M2', type: PaymentMethodType.VIRTUAL_ACCOUNT },
-  { label: 'Maybank VA (VA)', code: 'VA', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'BNI VA (I1)', code: 'I1', type: PaymentMethodType.VIRTUAL_ACCOUNT },
+  { label: 'BRI VA (BR)', code: 'BR', type: PaymentMethodType.VIRTUAL_ACCOUNT },
   { label: 'Permata VA (BT)', code: 'BT', type: PaymentMethodType.VIRTUAL_ACCOUNT },
   { label: 'CIMB VA (B1)', code: 'B1', type: PaymentMethodType.VIRTUAL_ACCOUNT },
-  { label: 'OVO (OV)', code: 'OV', type: PaymentMethodType.E_WALLET },
   { label: 'DANA (DA)', code: 'DA', type: PaymentMethodType.E_WALLET },
-  { label: 'ShopeePay (SP)', code: 'SP', type: PaymentMethodType.E_WALLET },
+  { label: 'OVO (OV)', code: 'OV', type: PaymentMethodType.E_WALLET },
+  { label: 'ShopeePay (SA)', code: 'SA', type: PaymentMethodType.E_WALLET },
+  { label: 'Alfamart (A1)', code: 'A1', type: PaymentMethodType.CONVENIENCE_STORE },
+  { label: 'Indomaret (IR)', code: 'IR', type: PaymentMethodType.CONVENIENCE_STORE },
 ]
 
 export function AddPaymentMethodModal({ categories }: Props) {
   const [open, setOpen] = useState(false)
+  const [gatewayStatus, setGatewayStatus] = useState<
+    Record<string, { status: string; message: string }>
+  >({})
+  const [isLoadingGateway, setIsLoadingGateway] = useState(false)
+
   const form = useForm<CreatePaymentMethodsValidator>({
     name: '',
     payment_method_category_id: '',
     image_id: '',
     fee_static: 0,
     fee_percentage: 0,
-    fee_type: PaymentMethodFeeType.MERCHANT,
+    fee_type: PaymentMethodFeeType.BUYER,
     is_available: true,
     is_featured: false,
     label: '',
@@ -244,14 +418,38 @@ export function AddPaymentMethodModal({ categories }: Props) {
     min_amount: 1000,
     max_amount: 10000000,
     type: PaymentMethodType.QR_CODE,
-    allow_access: [],
-    expired_in: 0,
+    allow_access: [PaymentMethodAllowAccess.ORDER, PaymentMethodAllowAccess.DEPOSIT],
+    expired_in: 3600,
     cut_off_start: '00:00',
     cut_off_end: '00:00',
     is_need_phone_number: false,
     is_need_email: false,
-    instruction: '',
+    instruction: '<p>Silakan selesaikan pembayaran sesuai panduan.</p>',
   })
+
+  useEffect(() => {
+    if (open) {
+      setIsLoadingGateway(true)
+      apiClient
+        .get<{
+          success: boolean
+          gateways: Array<{ id: string; status: string; message: string }>
+        }>('/admin/gateways/test-all')
+        .then((res) => {
+          if (res.data?.gateways) {
+            const map: Record<string, { status: string; message: string }> = {}
+            res.data.gateways.forEach((g) => {
+              map[g.id] = { status: g.status, message: g.message }
+            })
+            setGatewayStatus(map)
+          }
+        })
+        .catch(() => {})
+        .finally(() => {
+          setIsLoadingGateway(false)
+        })
+    }
+  }, [open])
 
   const applyPreset = (preset: PaymentPreset) => {
     let matchedCategoryId = form.data.payment_method_category_id
@@ -275,7 +473,11 @@ export function AddPaymentMethodModal({ categories }: Props) {
       max_amount: preset.max_amount,
       payment_method_category_id: matchedCategoryId || form.data.payment_method_category_id,
       is_available: true,
+      allow_access: [PaymentMethodAllowAccess.ORDER, PaymentMethodAllowAccess.DEPOSIT],
+      expired_in: 3600,
+      instruction: '<p>Silakan selesaikan pembayaran sesuai panduan.</p>',
     })
+    toast.success(`Preset "${preset.name}" diterapkan!`)
   }
 
   const handleProviderChange = (p: PaymentMethodProvider) => {
@@ -304,15 +506,62 @@ export function AddPaymentMethodModal({ categories }: Props) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+
+    // 1. Client-side explicit validation with toast alerts
+    if (!form.data.name || !form.data.name.trim()) {
+      toast.error('Nama Metode Pembayaran wajib diisi!')
+      return
+    }
+
+    if (!form.data.payment_method_category_id) {
+      toast.error('Kategori Metode Pembayaran wajib dipilih!')
+      return
+    }
+
+    if (!form.data.provider_code || !form.data.provider_code.trim()) {
+      toast.error('Provider Code wajib diisi!')
+      return
+    }
+
+    if (form.data.max_amount > 0 && form.data.min_amount > form.data.max_amount) {
+      toast.error('Minimal pembayaran tidak boleh lebih besar dari Maksimal pembayaran!')
+      return
+    }
+
     form.post('/admin/payments/methods', {
       onSuccess: () => {
+        toast.success('Metode pembayaran berhasil disimpan!')
         setOpen(false)
         form.reset()
+      },
+      onError: (errors) => {
+        console.error('[AddPaymentMethodModal] Errors:', errors)
+        const errList = Object.entries(errors)
+          .map(([key, msg]) => `${key}: ${msg}`)
+          .filter(Boolean)
+
+        if (errList.length > 0) {
+          toast.error(`Gagal menyimpan:\n${errList.join('\n')}`, { duration: 6000 })
+        } else {
+          toast.error('Gagal menyimpan metode pembayaran. Mohon periksa kelengkapan form.')
+        }
       },
     })
   }
 
   const isKlikQris = form.data.provider_name === PaymentMethodProvider.KLIKQRIS
+
+  const getProviderStatus = () => {
+    const p = form.data.provider_name
+    if (p === PaymentMethodProvider.BALANCE) {
+      return { status: 'connected', message: 'Sistem Saldo Internal (Otomatis & Siap Dipakai)' }
+    }
+    if (p === PaymentMethodProvider.MANUAL) {
+      return { status: 'connected', message: 'Metode Manual (Konfirmasi Admin)' }
+    }
+    return gatewayStatus[p]
+  }
+  const currentProviderStatus = getProviderStatus()
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -341,7 +590,7 @@ export function AddPaymentMethodModal({ categories }: Props) {
               }}
             >
               <SelectTrigger className="w-full bg-background text-xs h-9">
-                <SelectValue placeholder="Pilih preset (KlikQRIS, Tripay VA, E-Wallet, Saldo, dll)..." />
+                <SelectValue placeholder="Pilih preset (KlikQRIS, Duitku, Tripay VA, Saldo, dll)..." />
               </SelectTrigger>
               <SelectContent>
                 {PAYMENT_PRESETS.map((p) => (
@@ -355,7 +604,10 @@ export function AddPaymentMethodModal({ categories }: Props) {
 
           <div>
             <Label htmlFor="image_id" className="mb-2">
-              Image
+              Image{' '}
+              <span className="text-xs text-muted-foreground font-normal">
+                (Opsional - default otomatis)
+              </span>
             </Label>
             <FileManager onFilesSelected={(f) => form.setData('image_id', f.id)} />
             {form.errors.image_id && (
@@ -364,11 +616,11 @@ export function AddPaymentMethodModal({ categories }: Props) {
           </div>
           <div>
             <Label htmlFor="name" className="mb-2">
-              Name
+              Name <span className="text-red-500 font-bold">*</span>
             </Label>
             <Input
               id="name"
-              placeholder="Name"
+              placeholder="Contoh: QRIS (Semua Pembayaran), BCA Virtual Account"
               value={form.data.name}
               onChange={(e) => form.setData('name', e.target.value)}
               required
@@ -379,7 +631,7 @@ export function AddPaymentMethodModal({ categories }: Props) {
           </div>
           <div>
             <Label htmlFor="category" className="mb-2">
-              Category
+              Category <span className="text-red-500 font-bold">*</span>
             </Label>
             <Select
               value={form.data.payment_method_category_id}
@@ -387,7 +639,7 @@ export function AddPaymentMethodModal({ categories }: Props) {
               required
             >
               <SelectTrigger className="w-full" id="category">
-                <SelectValue placeholder="Category" />
+                <SelectValue placeholder="Pilih Kategori" />
               </SelectTrigger>
               <SelectContent>
                 {categories?.map((cat) => (
@@ -408,12 +660,12 @@ export function AddPaymentMethodModal({ categories }: Props) {
           <div className="flex gap-4">
             <div className="flex-1">
               <Label htmlFor="fee_static" className="mb-2">
-                Fee Static
+                Fee Static (Rp) <span className="text-red-500 font-bold">*</span>
               </Label>
               <Input
                 id="fee_static"
                 type="number"
-                placeholder="Fee Static"
+                placeholder="0"
                 value={form.data.fee_static}
                 onChange={(e) => form.setData('fee_static', Number(e.target.value))}
                 required
@@ -424,12 +676,12 @@ export function AddPaymentMethodModal({ categories }: Props) {
             </div>
             <div className="flex-1">
               <Label htmlFor="fee_percentage" className="mb-2">
-                Fee Percentage
+                Fee Percentage (%) <span className="text-red-500 font-bold">*</span>
               </Label>
               <Input
                 id="fee_percentage"
                 type="number"
-                placeholder="Fee Percentage"
+                placeholder="0"
                 value={form.data.fee_percentage}
                 onChange={(e) => form.setData('fee_percentage', Number(e.target.value))}
                 required
@@ -444,7 +696,7 @@ export function AddPaymentMethodModal({ categories }: Props) {
           <div className="flex gap-4">
             <div className="flex-1">
               <Label htmlFor="fee_type" className="mb-2">
-                Fee Type
+                Fee Type <span className="text-red-500 font-bold">*</span>
               </Label>
               <Select
                 value={form.data.fee_type}
@@ -468,7 +720,9 @@ export function AddPaymentMethodModal({ categories }: Props) {
             </div>
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
-                <Label htmlFor="type">Type</Label>
+                <Label htmlFor="type">
+                  Type <span className="text-red-500 font-bold">*</span>
+                </Label>
                 {isKlikQris && (
                   <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
                     Khusus QR Code
@@ -503,7 +757,7 @@ export function AddPaymentMethodModal({ categories }: Props) {
             <div className="flex gap-4">
               <div className="flex-1">
                 <Label htmlFor="provider_name" className="mb-2">
-                  Provider Name
+                  Provider Name <span className="text-red-500 font-bold">*</span>
                 </Label>
                 <Select
                   value={form.data.provider_name}
@@ -527,7 +781,9 @@ export function AddPaymentMethodModal({ categories }: Props) {
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-2">
-                  <Label htmlFor="provider_code">Provider Code</Label>
+                  <Label htmlFor="provider_code">
+                    Provider Code <span className="text-red-500 font-bold">*</span>
+                  </Label>
                   {isKlikQris && (
                     <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 px-1.5 py-0.5 rounded">
                       Terkunci: QRIS
@@ -547,6 +803,60 @@ export function AddPaymentMethodModal({ categories }: Props) {
                 )}
               </div>
             </div>
+
+            {/* Live Gateway Connectivity Status */}
+            {isLoadingGateway ? (
+              <div className="rounded-lg border border-border/60 bg-muted/40 px-3 py-2.5 text-xs flex items-center gap-2 animate-pulse text-muted-foreground">
+                <span className="h-2 w-2 rounded-full bg-primary/60 animate-ping" />
+                <span>Memeriksa status koneksi gateway {form.data.provider_name}...</span>
+              </div>
+            ) : currentProviderStatus ? (
+              <div
+                className={`rounded-lg px-3 py-2.5 text-xs flex items-center justify-between border transition-all ${
+                  currentProviderStatus.status === 'connected'
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                    : currentProviderStatus.status === 'not_configured'
+                      ? 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-300'
+                      : 'border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-base">
+                    {currentProviderStatus.status === 'connected'
+                      ? '🟢'
+                      : currentProviderStatus.status === 'not_configured'
+                        ? '🟡'
+                        : '🔴'}
+                  </span>
+                  <div>
+                    <div className="font-semibold flex items-center gap-1.5">
+                      <span>Gateway {form.data.provider_name.toUpperCase()}:</span>
+                      <span>
+                        {currentProviderStatus.status === 'connected'
+                          ? 'Terkoneksi & Siap Pakai'
+                          : currentProviderStatus.status === 'not_configured'
+                            ? 'Belum Dikonfigurasi di .env'
+                            : 'Error / Gangguan'}
+                      </span>
+                    </div>
+                    <div className="text-[11px] opacity-85 mt-0.5">
+                      {currentProviderStatus.message}
+                    </div>
+                  </div>
+                </div>
+                <span
+                  className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full border ${
+                    currentProviderStatus.status === 'connected'
+                      ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-800 dark:text-emerald-200'
+                      : currentProviderStatus.status === 'not_configured'
+                        ? 'border-amber-500/40 bg-amber-500/20 text-amber-800 dark:text-amber-200'
+                        : 'border-red-500/40 bg-red-500/20 text-red-800 dark:text-red-200'
+                  }`}
+                >
+                  {currentProviderStatus.status}
+                </span>
+              </div>
+            ) : null}
 
             {/* Smart Hints & Shortcut Pills */}
             {isKlikQris && (

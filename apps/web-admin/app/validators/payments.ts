@@ -30,7 +30,7 @@ export const paymentIdValidator = vine.object({
 export const createPaymentMethodsValidator = vine.object({
   name: vine.string().maxLength(100),
   payment_method_category_id: vine.string().uuid(),
-  image_id: vine.string().uuid(),
+  image_id: vine.string().uuid().optional(),
   fee_static: vine.number(),
   fee_percentage: vine.number().min(0).max(100),
   fee_type: vine.enum(PaymentMethodFeeType),
@@ -44,11 +44,11 @@ export const createPaymentMethodsValidator = vine.object({
   min_amount: vine.number().min(0),
   max_amount: vine.number().min(0),
   type: vine.enum(PaymentMethodType),
-  allow_access: vine.array(vine.enum(PaymentMethodAllowAccess)),
-  expired_in: vine.number().min(0),
+  allow_access: vine.array(vine.enum(PaymentMethodAllowAccess)).optional(),
+  expired_in: vine.number().min(0).optional(),
   cut_off_start: vine.string().optional(),
   cut_off_end: vine.string().optional(),
-  instruction: vine.string(),
+  instruction: vine.string().optional(),
 })
 
 export type CreatePaymentMethodsValidator = Infer<typeof createPaymentMethodsValidator>
