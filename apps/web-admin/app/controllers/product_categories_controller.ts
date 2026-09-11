@@ -65,11 +65,66 @@ export default class ProductsCategoriesController {
     })
   }
 
-  public async create({ inertia }: HttpContext) {
-    return inertia.render('products/product-categories/create-product-category', {
-      title: 'Create Product Category',
-      description: 'Add a new product category to the system.',
+  public async create({ response }: HttpContext) {
+    return response.redirect('/admin/product-categories/game/create')
+  }
+
+  public async editDirect({ params, response }: HttpContext) {
+    const category = await db.query.productCategories.findFirst({
+      where: eq(tb.productCategories.id, params.id),
     })
+
+    if (!category) {
+      return response.notFound('Product category not found')
+    }
+
+    const id = category.id
+
+    if (category.product_billing_type === ProductBillingType.POSTPAID) {
+      if (category.type === ProductCategoryType.PLN_POSTPAID) {
+        return response.redirect(`/admin/product-categories/postpaid/tagihan-pln/${id}/edit`)
+      }
+      if (category.type === ProductCategoryType.PDAM) {
+        return response.redirect(`/admin/product-categories/postpaid/pdam/${id}/edit`)
+      }
+      if (category.type === ProductCategoryType.INTERNET_POSTPAID) {
+        return response.redirect(`/admin/product-categories/postpaid/internet/${id}/edit`)
+      }
+      if (category.type === ProductCategoryType.BPJS_KESEHATAN_POSTPAID) {
+        return response.redirect(`/admin/product-categories/postpaid/bpjs-kesehatan/${id}/edit`)
+      }
+      if (category.type === ProductCategoryType.BPJS_KETENAGAKERJAAN_POSTPAID) {
+        return response.redirect(
+          `/admin/product-categories/postpaid/bpjs-ketenagakerjaan/${id}/edit`,
+        )
+      }
+      return response.redirect(`/admin/product-categories/postpaid/tagihan-pln/${id}/edit`)
+    }
+
+    if (category.type === ProductCategoryType.GAME) {
+      return response.redirect(`/admin/product-categories/game/${id}/edit`)
+    }
+    if (category.type === ProductCategoryType.PULSA) {
+      return response.redirect(`/admin/product-categories/pulsa/${id}/edit`)
+    }
+    if (category.type === ProductCategoryType.KUOTA) {
+      return response.redirect(`/admin/product-categories/kuota/${id}/edit`)
+    }
+    if (category.type === ProductCategoryType.PLN_PREPAID) {
+      return response.redirect(`/admin/product-categories/token-pln/${id}/edit`)
+    }
+    if (
+      category.type === ProductCategoryType.E_WALLET ||
+      category.type === ProductCategoryType.E_WALLET_BEBAS_NOMINAL ||
+      category.type === ProductCategoryType.E_MONEY
+    ) {
+      return response.redirect(`/admin/product-categories/e-wallet/${id}/edit`)
+    }
+    if (category.type === ProductCategoryType.VOUCHER) {
+      return response.redirect(`/admin/product-categories/voucher/${id}/edit`)
+    }
+
+    return response.redirect(`/admin/product-categories/other-prepaid/${id}/edit`)
   }
 
   public async postCreate({ request, response, session }: HttpContext) {
@@ -353,11 +408,6 @@ export default class ProductsCategoriesController {
     const data = await request.validateUsing(vine.compile(productCategoryIdValidator), {
       data: request.params(),
     })
-
-    const { type } = request.params()
-    if (!Object.values(ProductCategoryType).includes(type)) {
-      return response.notFound('Product category type not found')
-    }
 
     const productCategory = await db.query.productCategories.findFirst({
       where: eq(tb.productCategories.id, data.id),

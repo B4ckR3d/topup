@@ -51,7 +51,7 @@ export default function EditProductCategory(
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    patch(`/admin/product-categories/voucher/${props.productCategory.id}`, {
+    patch(`/admin/product-categories/postpaid/tagihan-pln/${props.productCategory.id}`, {
       onSuccess: () => {
         toast.success('Product category updated successfully!')
       },
@@ -65,7 +65,9 @@ export default function EditProductCategory(
 
   return (
     <AdminLayout>
-      <h2 className="mt-4 text-2xl font-semibold text-foreground">Edit Voucher Product Category</h2>
+      <h2 className="mt-4 text-2xl font-semibold text-foreground">
+        Edit Tagihan PLN Product Category
+      </h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Lengkapi data produk dengan rapi untuk memudahkan publikasi dan maintenance.
       </p>

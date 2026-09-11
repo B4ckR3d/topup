@@ -268,20 +268,68 @@ router
       .get('/get-json', [ProductCategoryController, 'getProductCategoryByCategoryNameJson'])
       .as('productCategories.getProductCategoryByCategoryNameJson')
 
+    router.get('/create', [ProductCategoryController, 'create']).as('productCategories.create')
+
+    router
+      .get('/postpaid/:type/:id/edit', [ProductCategoryController, 'editDirect'])
+      .as('productCategories.editPostpaidDirect')
+    router
+      .get('/:type/:id/edit', [ProductCategoryController, 'editDirect'])
+      .as('productCategories.editWithTypeDirect')
+    router
+      .get('/:id/edit', [ProductCategoryController, 'editDirect'])
+      .as('productCategories.editDirect')
+
     router
       .get('/:billingType/:type/:id', [ProductCategoryController, 'detail'])
       .as('productCategories.detailWithBillingType')
+    router
+      .get('/postpaid/:type/:id', [ProductCategoryController, 'detail'])
+      .as('productCategories.detailPostpaid')
     router.get('/:type/:id', [ProductCategoryController, 'detail']).as('productCategories.detail')
+    router.get('/:id', [ProductCategoryController, 'detail']).as('productCategories.detailDirect')
 
+    router
+      .post('/', [ProductCategoryController, 'postCreate'])
+      .as('productCategories.postCreateRoot')
+    router
+      .post('/create', [ProductCategoryController, 'postCreate'])
+      .as('productCategories.postCreateDirect')
+    router
+      .post('/postpaid/:type/create', [ProductCategoryController, 'postCreate'])
+      .as('productCategories.postCreatePostpaid')
     router
       .post('/:type/create', [ProductCategoryController, 'postCreate'])
       .as('productCategories.postCreate')
+
+    router
+      .patch('/postpaid/:type/:id', [ProductCategoryController, 'postEdit'])
+      .as('productCategories.postEditPostpaid')
+    router
+      .post('/postpaid/:type/:id', [ProductCategoryController, 'postEdit'])
+      .as('productCategories.postEditPostpaidPost')
     router
       .patch('/:type/:id', [ProductCategoryController, 'postEdit'])
       .as('productCategories.postEdit')
     router
+      .post('/:type/:id', [ProductCategoryController, 'postEdit'])
+      .as('productCategories.postEditPost')
+    router
+      .patch('/:id', [ProductCategoryController, 'postEdit'])
+      .as('productCategories.postEditDirect')
+    router
+      .post('/:id', [ProductCategoryController, 'postEdit'])
+      .as('productCategories.postEditDirectPost')
+
+    router
+      .delete('/postpaid/:type/:id', [ProductCategoryController, 'postDelete'])
+      .as('productCategories.deletePostpaid')
+    router
       .delete('/:type/:id', [ProductCategoryController, 'postDelete'])
       .as('productCategories.delete')
+    router
+      .delete('/:id', [ProductCategoryController, 'postDelete'])
+      .as('productCategories.deleteDirect')
   })
   .prefix('/admin/product-categories')
   .middleware(middleware.role(UserRole.ADMIN))
@@ -310,8 +358,12 @@ router
     router
       .delete('/disconnect/:id', [InputFieldController, 'postDisconnect'])
       .as('inputFields.postDisconnect')
+    router
+      .post('/disconnect/:id', [InputFieldController, 'postDisconnect'])
+      .as('inputFields.postDisconnectPost')
 
     router.patch('/:id', [InputFieldController, 'postUpdate']).as('inputFields.postUpdate')
+    router.post('/:id', [InputFieldController, 'postUpdate']).as('inputFields.postUpdatePost')
     router.delete('/:id', [InputFieldController, 'postDelete']).as('inputFields.delete')
   })
   .prefix('/admin/input-fields')
@@ -326,6 +378,9 @@ router
     router
       .patch('/:id', [ProductSubCategoryController, 'postUpdate'])
       .as('productSubCategories.postUpdate')
+    router
+      .post('/:id', [ProductSubCategoryController, 'postUpdate'])
+      .as('productSubCategories.postUpdatePost')
     router
       .delete('/:id', [ProductSubCategoryController, 'postDelete'])
       .as('productSubCategories.delete')
@@ -345,12 +400,19 @@ router
 
     router.get('/:id', [ProductController, 'detail']).as('products.detail')
     router.patch('/:id', [ProductController, 'postUpdate']).as('products.postEdit')
+    router.post('/:id', [ProductController, 'postUpdate']).as('products.postEditPost')
     router
       .patch('/:id/update-is-available', [ProductController, 'updateIsAvailable'])
       .as('products.postUpdateIsAvailable')
     router
+      .post('/:id/update-is-available', [ProductController, 'updateIsAvailable'])
+      .as('products.postUpdateIsAvailablePost')
+    router
       .patch('/:id/update-provider-price', [ProductController, 'updateProviderPrice'])
       .as('products.updateProviderPrice')
+    router
+      .post('/:id/update-provider-price', [ProductController, 'updateProviderPrice'])
+      .as('products.updateProviderPricePost')
     router.delete('/:id', [ProductController, 'postDelete']).as('products.delete')
   })
   .prefix('/admin/products')
@@ -443,6 +505,7 @@ router
     router.get('/history', [OfferController, 'getUsedOffers']).as('offers.used')
     router.post('/create', [OfferController, 'postCreate']).as('offers.postCreate')
     router.patch('/:id/edit', [OfferController, 'postUpdate']).as('offers.postUpdate')
+    router.patch('/:id', [OfferController, 'postUpdate']).as('offers.postUpdateDirect')
     router.delete('/:id', [OfferController, 'postDelete']).as('offers.delete')
 
     router.post('/:id/connect/user', [OfferController, 'connectUser']).as('offers.connectUser')

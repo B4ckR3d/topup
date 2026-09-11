@@ -20,6 +20,7 @@ import {
 import { ArrowLeftIcon, PlusIcon, TrashIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import type ConfigHomesController from '#controllers/configs/config_homes_controller'
+import Image from '~/components/image'
 import AdminLayout from '~/components/layout/admin-layout'
 import AddProductCategoryModal from './add-product-category-modal'
 
@@ -98,8 +99,8 @@ export default function ProductSectionDetail({ productSection, productOnProductS
               {productSection.image_url && (
                 <div>
                   <p className="text-xs text-muted-foreground mb-2">Image</p>
-                  <img
-                    src={`${import.meta.env.VITE_S3_URL}${productSection.image_url}`}
+                  <Image
+                    src={`${productSection.image_url}`}
                     alt={productSection.name}
                     className="w-20 h-20 rounded-lg object-cover border"
                   />

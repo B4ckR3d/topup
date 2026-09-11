@@ -12,6 +12,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@umbreon/ui/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@umbreon/ui/components/ui/dropdown-menu'
 import { Input } from '@umbreon/ui/components/ui/input'
 import {
   Select,
@@ -20,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@umbreon/ui/components/ui/select'
+import { ChevronDown, Plus } from 'lucide-react'
 import { useState } from 'react'
 import type ProductsCategoriesController from '#controllers/product_categories_controller'
 import Image from '~/components/image'
@@ -47,9 +56,64 @@ export default function ProductCategory(props: Props) {
     <AdminLayout>
       <div className="mb-4 mt-4 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-foreground">Product Categories</h1>
-        <Button asChild>
-          <Link href="/admin/product-categories/create">Add New</Link>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="gap-1">
+              <Plus className="size-4" />
+              <span>Add New</span>
+              <ChevronDown className="size-3.5 opacity-70" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
+              Prabayar (Prepaid)
+            </DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/game/create">Game</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/pulsa/create">Pulsa</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/kuota/create">Kuota Data</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/token-pln/create">Token PLN</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/e-wallet/create">E-Wallet</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/voucher/create">Voucher</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/other-prepaid/create">Other Prepaid</Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
+              Pascabayar (Postpaid)
+            </DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/postpaid/tagihan-pln/create">Tagihan PLN</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/postpaid/pdam/create">PDAM</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/postpaid/internet/create">Internet</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/postpaid/bpjs-kesehatan/create">
+                BPJS Kesehatan
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/product-categories/postpaid/bpjs-ketenagakerjaan/create">
+                BPJS Ketenagakerjaan
+              </Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
       <form
         className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/90 p-3"

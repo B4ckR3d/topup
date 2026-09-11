@@ -149,10 +149,10 @@ const columns: ColumnDef<Props['productCategories'][number]>[] = [
     cell: ({ row }) => (
       <div className="flex flex-wrap gap-2" key={row.original.id}>
         <Button variant="outline" size="sm" asChild>
-          <Link href={`/admin/product-categories/pulsa/${row.original.id}`}>Detail</Link>
+          <Link href={`/admin/product-categories/e-wallet/${row.original.id}`}>Detail</Link>
         </Button>
         <Button variant="outline" size="sm" asChild>
-          <Link href={`/admin/product-categories/pulsa/${row.original.id}/edit`}>Edit</Link>
+          <Link href={`/admin/product-categories/e-wallet/${row.original.id}/edit`}>Edit</Link>
         </Button>
         <Dialog>
           <DialogTrigger asChild>
@@ -172,10 +172,10 @@ const columns: ColumnDef<Props['productCategories'][number]>[] = [
               <Button
                 variant="destructive"
                 onClick={() => {
-                  router.delete(`/admin/product-categories/pulsa/${row.original.id}`, {
+                  router.delete(`/admin/product-categories/e-wallet/${row.original.id}`, {
                     preserveScroll: true,
                     onSuccess: () => {
-                      router.get('/admin/product-categories/pulsa')
+                      router.get('/admin/product-categories/e-wallet')
                     },
                   })
                 }}

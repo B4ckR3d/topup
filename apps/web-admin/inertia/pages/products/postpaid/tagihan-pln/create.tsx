@@ -19,9 +19,9 @@ import AdminLayout from '~/components/layout/admin-layout'
 
 export default function CreateProductCategory() {
   const { data, errors, setData, post, processing } = useForm<CreateProductCategoryValidator>(
-    'createpulsa',
+    'create-tagihan-pln',
     {
-      file_image_id: 'cffe1506-4a45-4ee5-aa7d-eb69748192a9',
+      file_image_id: '',
       file_icon_id: '',
       file_banner_id: '',
       name: '',
@@ -36,9 +36,9 @@ export default function CreateProductCategory() {
       seo_title: '',
       seo_description: '',
       seo_image_id: '',
-      product_billing_type: ProductBillingType.PREPAID,
-      type: ProductCategoryType.VOUCHER,
-      product_fullfillment_type: ProductFullfillmentType.AUTOMATIC_DIRECT_WITH_VOUCHER,
+      product_billing_type: ProductBillingType.POSTPAID,
+      type: ProductCategoryType.PLN_POSTPAID,
+      product_fullfillment_type: ProductFullfillmentType.AUTOMATIC_DIRECT,
       is_special_feature: false,
       special_feature_key: '',
       tags1: [],
@@ -48,7 +48,7 @@ export default function CreateProductCategory() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    post('/admin/product-categories/voucher/create', {
+    post('/admin/product-categories/tagihan-pln/create', {
       onSuccess: () => {
         toast.success('Product category created successfully!')
       },

@@ -80,6 +80,16 @@ services:
       PORT: 9991
       DATABASE_URL: ${DATABASE_URL:-postgresql://umbreon_admin:Umbr30n_Pg_S3cur3_P@ss_2026!@postgres:5432/umbreon_db}
       REDIS_URL: ${REDIS_URL:-redis://:Umbr30n_R3d1s_Auth_9921_xK!@redis:6379}
+      JWT_SECRET: ${JWT_SECRET:-umbreonstore-super-secret-jwt-key-change-this-in-production}
+      CHECKOUT_TOKEN_SECRET: ${CHECKOUT_TOKEN_SECRET:-umbreonstore-checkout-secret-token-change-this}
+      DIGIFLAZZ_USERNAME: ${DIGIFLAZZ_USERNAME:-nojokaDlVZxg}
+      DIGIFLAZZ_API_KEY: ${DIGIFLAZZ_API_KEY:-67628e57-dada-50a2-a238-51006eaa8bb7}
+      DIGIFLAZZ_CALLBACK_SECRET: ${DIGIFLAZZ_CALLBACK_SECRET:-67628e57dada50a2a23851006eaa8bb7}
+      KLIKQRIS_BASE_URL: ${KLIKQRIS_BASE_URL:-https://klikqris.com/api}
+      KLIKQRIS_API_KEY: ${KLIKQRIS_API_KEY:-VnmhZfcCLUrMvkZE8avu2rK8KKNzFX9uK6Yk9fCp}
+      KLIKQRIS_MERCHANT_ID: ${KLIKQRIS_MERCHANT_ID:-178617608180}
+      KLIKQRIS_RETURN_URL: ${KLIKQRIS_RETURN_URL:-https://umbreon.store/payment/finish}
+      KLIKQRIS_CALLBACK_URL: ${KLIKQRIS_CALLBACK_URL:-https://api.umbreon.store/callback/payment/klikqris}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-${AWS_ACCESS_KEY_ID:-umbreon_minio}}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-${AWS_SECRET_ACCESS_KEY:-Umbr30n_M1n10_S3cur3_2026!}}
@@ -124,6 +134,10 @@ services:
       SESSION_DRIVER: ${SESSION_DRIVER:-cookie}
       SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
       APP_KEY: ${APP_KEY:-tiQkvkpez9kpzlviKrawKt261I_H1EOT}
+      JWT_SECRET: ${JWT_SECRET:-umbreonstore-super-secret-jwt-key-change-this-in-production}
+      DIGIFLAZZ_USERNAME: ${DIGIFLAZZ_USERNAME:-nojokaDlVZxg}
+      DIGIFLAZZ_API_KEY: ${DIGIFLAZZ_API_KEY:-67628e57-dada-50a2-a238-51006eaa8bb7}
+      DIGIFLAZZ_CALLBACK_SECRET: ${DIGIFLAZZ_CALLBACK_SECRET:-67628e57dada50a2a23851006eaa8bb7}
       DRIVE_DISK: ${DRIVE_DISK:-s3}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-umbreon_minio}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-Umbr30n_M1n10_S3cur3_2026!}
@@ -166,6 +180,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://umbreon_admin:Umbr30n_Pg_S3cur3_P@ss_2026!@postgres:5432/umbreon_db}
       VITE_API_URL: ${VITE_API_URL:-http://localhost:9991}
       VITE_GOOGLE_CLIENT_ID: ${VITE_GOOGLE_CLIENT_ID:-}
+      VITE_SESSION_SECRET: ${VITE_SESSION_SECRET:-umbreonstore-session-secret-change-this-in-production}
     ports:
       - "${WEB_CLIENT_PORT:-9992}:9992"
     depends_on:

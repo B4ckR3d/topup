@@ -160,9 +160,11 @@ export default class ProductsController {
       return ctx.response.redirect().back()
     }
 
-    const image = await db.query.fileManager.findFirst({
-      where: eq(tb.fileManager.url, product.image_url),
-    })
+    const image = product.image_url
+      ? await db.query.fileManager.findFirst({
+          where: eq(tb.fileManager.url, product.image_url),
+        })
+      : null
 
     return ctx.response.json({
       data: {

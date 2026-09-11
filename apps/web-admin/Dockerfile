@@ -30,7 +30,7 @@ RUN pnpm --filter @umbreon/db build
 RUN pnpm --filter @umbreon/ui build
 
 # Build web-admin (compiles TypeScript server & Vite/Inertia SSR assets into build/)
-ARG VITE_S3_URL=http://84.247.148.122:9000/umbreon
+ARG VITE_S3_URL=""
 ENV VITE_S3_URL=$VITE_S3_URL
 RUN pnpm --filter web-admin build
 

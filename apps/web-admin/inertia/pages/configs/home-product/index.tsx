@@ -31,6 +31,7 @@ import { useState } from 'react'
 import type ConfigHomesController from '#controllers/configs/config_homes_controller'
 import type { CreateHomeProductSectionValidator } from '#validators/config_home'
 import FileManager from '~/components/file-manager'
+import Image from '~/components/image'
 import AdminLayout from '~/components/layout/admin-layout'
 import { formatDate } from '~/utils'
 import EditProductSectionModal from './edit-modal'
@@ -44,9 +45,9 @@ const columns: ColumnDef<Props['productSections'][number]>[] = [
     cell: ({ row }) => (
       <div className="w-12 h-12 rounded-md border overflow-hidden flex items-center justify-center bg-muted">
         {row.original.image_url ? (
-          <img
+          <Image
             className="object-contain w-full h-full"
-            src={`${import.meta.env.VITE_S3_URL}${row.original.image_url}`}
+            src={`${row.original.image_url}`}
             alt={row.original.name}
           />
         ) : (

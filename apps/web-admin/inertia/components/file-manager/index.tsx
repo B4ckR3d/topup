@@ -100,6 +100,7 @@ export default function FileManager({
   defaultFileId?: string
 }) {
   const [files, setFiles] = useState<File[] | null>(null)
+  const [activeTab, setActiveTab] = useState<'list-file' | 'upload-file'>('list-file')
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([])
   const [selectedFile, setSelectedFile] = useState<InferSelectModel<typeof tb.fileManager> | null>(
     null,
@@ -162,6 +163,7 @@ export default function FileManager({
           }
           refetch()
           setFiles(null)
+          setActiveTab('list-file')
           return response.data
         })
         .catch((error) => {
@@ -342,7 +344,11 @@ export default function FileManager({
           <DialogDescription></DialogDescription>
         </DialogHeader>
 
-        <Tabs defaultValue="list-file" className="flex flex-1 flex-col gap-4 overflow-hidden">
+        <Tabs
+          value={activeTab}
+          onValueChange={(val) => setActiveTab(val as 'list-file' | 'upload-file')}
+          className="flex flex-1 flex-col gap-4 overflow-hidden"
+        >
           <TabsList className="flex flex-wrap justify-start gap-2 shrink-0">
             <TabsTrigger value="list-file">Files</TabsTrigger>
             <TabsTrigger value="upload-file">Upload</TabsTrigger>

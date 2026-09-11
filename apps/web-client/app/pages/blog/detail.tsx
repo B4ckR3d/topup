@@ -2,6 +2,7 @@ import { isAxiosError } from 'axios'
 import { Facebook, Link as LinkIcon, MessageCircle, Send, Share2, Twitter } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { data, Link, useParams } from 'react-router'
+import Image from '~/components/image'
 import { apiClient } from '~/utils/axios'
 import type { Route } from './+types'
 
@@ -142,7 +143,7 @@ export default function BlogDetail({ loaderData }: Route.ComponentProps) {
 
       <SocialShare title={title} url={currentUrl} />
       {post?.image_url ? (
-        <img
+        <Image
           src={post.image_url}
           alt={title}
           className="mt-6 w-full h-auto rounded-xl object-cover max-h-125"

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@umbreon/ui/components/ui/button'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import Image from '~/components/image'
 import { apiClient } from '~/utils/axios'
 import { formatDate } from '~/utils/format'
 
@@ -106,7 +107,7 @@ export default function Blog() {
                 >
                   <article className="overflow-hidden flex flex-col rounded-xl w-full border border-border bg-card hover:shadow-md hover:border-primary/30 transition-all duration-300">
                     <div className="overflow-hidden aspect-video bg-muted/30 relative border-b border-border/50">
-                      <img
+                      <Image
                         src={post.image_url}
                         alt={post.title}
                         loading="lazy"

@@ -26,10 +26,11 @@ export default class ProductSubCategoriesController {
       ctx.session.flashErrors({
         image_id: 'Image file not found',
       })
+      return ctx.response.redirect().back()
     }
 
     await db.insert(tb.productSubCategories).values({
-      image_url: image!.url,
+      image_url: image.url,
       ...data,
     })
 
@@ -109,7 +110,17 @@ export default class ProductSubCategoriesController {
       return ctx.response.redirect().back()
     }
 
-    await db.delete(tb.productSubCategories).where(eq(tb.productSubCategories.id, id))
+    try {
+      await db.transaction(async (tx) => {
+        await tx.delete(tb.products).where(eq(tb.products.product_sub_category_id, id))
+        await tx.delete(tb.productSubCategories).where(eq(tb.productSubCategories.id, id))
+      })
+    } catch (err: any) {
+      ctx.session.flashErrors({
+        error: err?.message || 'Failed to delete product sub-category',
+      })
+      return ctx.response.redirect().back()
+    }
 
     ctx.session.flash('success', 'Product sub-category deleted successfully.')
     return ctx.response.redirect().back()
@@ -131,9 +142,11 @@ export default class ProductSubCategoriesController {
       return ctx.response.redirect().back()
     }
 
-    const image = await db.query.fileManager.findFirst({
-      where: eq(tb.fileManager.url, productSubCategory.image_url),
-    })
+    const image = productSubCategory.image_url
+      ? await db.query.fileManager.findFirst({
+          where: eq(tb.fileManager.url, productSubCategory.image_url),
+        })
+      : null
 
     return ctx.response.json({
       data: {

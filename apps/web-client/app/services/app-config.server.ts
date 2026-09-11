@@ -41,14 +41,29 @@ export async function getPublicAppConfig(): Promise<PublicAppConfig> {
     await close()
 
     const map = new Map(items.map((i) => [i.key, i.value]))
-    const s3Url = process.env.VITE_S3_URL || 'http://84.247.148.122:9000/umbreon'
-
     const formatUrl = (url?: string | null) => {
       if (!url) return ''
+      if (url.includes(':9000')) {
+        const parts = url.split('/storage/images/')
+        if (parts.length > 1) {
+          return `/storage/images/${parts[1]}`
+        }
+      }
+      if (url.startsWith('/storage/')) {
+        return url
+      }
+      if (url.includes('/storage/images/')) {
+        const after = url.split('/storage/images/')[1]
+        return `/storage/images/${after}`
+      }
       if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
         return url
       }
-      return `${s3Url}/${url.replace(/^\/+/, '')}`
+      const s3Url = (process.env.VITE_S3_URL || '').replace(/\/+$/, '')
+      if (s3Url) {
+        return `${s3Url}/${url.replace(/^\/+/, '')}`
+      }
+      return `/${url.replace(/^\/+/, '')}`
     }
 
     const appName = map.get('app.name') || 'Umbreon Store'

@@ -6,6 +6,7 @@ import { ChevronRightIcon, CreditCardIcon, WalletMinimalIcon } from 'lucide-reac
 import { useEffect, useMemo, useState } from 'react'
 import type { UseFormReturn } from 'react-hook-form'
 import toast from 'react-hot-toast'
+import Image from '~/components/image'
 import { userAtom } from '~/store/user'
 import { apiClient } from '~/utils/axios'
 import { formatPrice } from '~/utils/format'
@@ -181,12 +182,8 @@ export default function PaymentSection({ products, form }: Props) {
         >
           {selectedPayment ? (
             <div className="flex items-center gap-3">
-              <img
-                src={
-                  selectedPayment.image_url.startsWith('http')
-                    ? selectedPayment.image_url
-                    : `${import.meta.env.VITE_S3_URL || 'http://84.247.148.122:9000/umbreon'}${selectedPayment.image_url}`
-                }
+              <Image
+                src={selectedPayment.image_url}
                 alt={selectedPayment.name}
                 className="w-10 rounded-md object-cover"
               />

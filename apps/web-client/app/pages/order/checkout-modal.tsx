@@ -16,6 +16,7 @@ import { useEffect, useId, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router'
 import z from 'zod'
+import Image from '~/components/image'
 import { apiClient } from '~/utils/axios'
 import { formatPrice, formatTime } from '~/utils/format'
 import BalancePinDialog from './balance-pin-dialog'
@@ -492,12 +493,8 @@ export default function CheckoutModal({ data }: Props) {
                     className="w-full justify-between p-3 h-auto border-dashed border-border/70 hover:border-primary/30 transition-[color,background-color,border-color] duration-200"
                   >
                     <div className="flex items-center gap-3">
-                      <img
-                        src={
-                          selectedPayment.image_url.startsWith('http')
-                            ? selectedPayment.image_url
-                            : `${import.meta.env.VITE_S3_URL || 'http://84.247.148.122:9000/umbreon'}${selectedPayment.image_url}`
-                        }
+                      <Image
+                        src={selectedPayment.image_url}
                         alt={selectedPayment.name}
                         className="w-10 h-auto max-h-12 rounded-md object-cover"
                       />

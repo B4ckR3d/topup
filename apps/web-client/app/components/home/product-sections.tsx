@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useId, useState } from 'react'
 import { Link } from 'react-router'
+import Image from '~/components/image'
 import { apiClient } from '~/utils/axios'
 
 export default function HomeProductSections() {
@@ -68,7 +69,7 @@ export default function HomeProductSections() {
                 <Link key={item.id} to={`/order/${item.slug}`} className="h-full group">
                   <div className="overflow-hidden rounded-xl h-full flex flex-col relative transform transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:shadow-2xl group-hover:-translate-y-2">
                     <div className="overflow-hidden relative">
-                      <img
+                      <Image
                         src={item.image_url}
                         alt={item.name}
                         className="transition-all duration-500 object-cover w-full aspect-square group-hover:brightness-110"

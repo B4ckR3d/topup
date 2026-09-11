@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import Image from '~/components/image'
 import { apiClient } from '~/utils/axios'
 
 function formatIDDate(d: string) {
@@ -154,7 +155,7 @@ export default function OffersIndexPage() {
                   <article className="overflow-hidden rounded-xl border border-border bg-card h-full flex flex-col">
                     <div className="overflow-hidden">
                       {post.image_url ? (
-                        <img
+                        <Image
                           src={post.image_url}
                           alt={post.title}
                           className="w-full aspect-video object-cover transition-transform duration-500 group-hover:scale-105"

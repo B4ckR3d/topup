@@ -14,6 +14,7 @@ import {
   StoreIcon,
   WalletIcon,
 } from 'lucide-react'
+import Image from '~/components/image'
 import { formatPrice } from '~/utils/format'
 
 export type PaymentItem = {
@@ -306,12 +307,8 @@ export default function PaymentMethodSelector({
                           <div className="flex items-center gap-3">
                             <div className="relative shrink-0">
                               <div className="bg-white p-1 rounded-md">
-                                <img
-                                  src={
-                                    item.image_url.startsWith('http')
-                                      ? item.image_url
-                                      : `${import.meta.env.VITE_S3_URL || 'http://84.247.148.122:9000/umbreon'}${item.image_url}`
-                                  }
+                                <Image
+                                  src={item.image_url}
                                   alt={item.name}
                                   className="w-10 h-auto object-contain"
                                 />
