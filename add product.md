@@ -1,15 +1,44 @@
-# 🎮 Panduan Tambah Produk H2H Otomatis & Konfigurasi Payment Gateway - Umbreon Store
+# ⚡ Panduan 1-Click Auto-Crawl Digiflazz & Manajemen Produk Otomatis - Umbreon Store
 
-Dokumen ini menjelaskan alur penambahan produk otomatis dari provider H2H (**Digiflazz** & **VIP-Reseller**), penjelasan hierarki produk, serta konfigurasi **Payment Gateway pintar (KlikQRIS, Tripay, Duitku)** yang kini telah dilengkapi fitur *auto-fill* dan *smart presets*.
+Dokumen ini menjelaskan fitur **1-Click Auto-Crawl Digiflazz**, alur penambahan produk otomatis dari provider H2H (**Digiflazz** & **VIP-Reseller**), penjelasan hierarki produk, serta konfigurasi **Payment Gateway pintar (KlikQRIS, Tripay, Duitku)**.
+
+---
+
+## 🚀 FITUR UTAMA: 1-Click Auto-Crawl Digiflazz ("Semua Otomatis, Tinggal Edit")
+
+Kini Anda **TIDAK PERLU** lagi membuat kategori, sub-kategori, input ID akun, dan produk SKU satu per satu secara manual. Semuanya bisa ditarik dan dibuat **100% otomatis dalam 1 klik**!
+
+### Cara Menggunakan 1-Click Auto-Crawl:
+1. Buka menu **Product Categories** (`https://pepek.umbreon.store/admin/product-categories`).
+2. Di pojok kanan atas, klik tombol berkedip emas:  
+   👉 **`[ ⚡ Auto-Crawl Digiflazz ]`**
+3. Di dalam dialog yang muncul:
+   * **Status Provider**: Terlihat indikator hijau aktif & saldo Digiflazz Anda secara real-time.
+   * **Pilih Kategori**: Pilih *Semua Kategori* (atau pilih khusus *Game*, *Pulsa*, *Kuota Data*, *E-Wallet*, dll).
+   * **Pilih Brand**: Pilih *Semua Brand* (untuk tarik seluruh katalog sekaligus) atau pilih brand tertentu (misal *Mobile Legends*, *Free Fire*, *Telkomsel*).
+   * **Atur Margin Keuntungan**:
+     * **Profit Statis (Rp)**: misal `Rp 500` atau `Rp 1.000`.
+     * **Profit Persentase (%)**: misal `3%` atau `5%`.
+     * Terdapat simulasi kalkulator harga jual otomatis secara langsung di layar.
+4. Klik tombol besar:  
+   👉 **`[ ⚡ Mulai Auto-Crawl & Buat Katalog Otomatis ]`**
+
+### Apa yang Dilakukan Sistem Secara Otomatis?
+* ✅ **Kategori Dibuat Otomatis**: Nama game, slug, publisher (Moonton, Garena, HoYoverse, dll), icon HD, dan banner promosi otomatis diisi.
+* ✅ **Input Form Akun Terpasang Otomatis**: Form `User ID` & `Zone ID` otomatis terpasang untuk Mobile Legends, `User ID` untuk Free Fire / Genshin, `Nomor HP` untuk Pulsa / E-Wallet, dan `No Meter` untuk PLN.
+* ✅ **Sub-Kategori Dibuat Otomatis**: Tab "Diamonds", "Voucher", "Reguler", "Weekly Pass", dll otomatis terbuat.
+* ✅ **Seluruh Produk & SKU Digiflazz Masuk**: Semua nominal dan varian langsung masuk dengan harga modal H2H, harga jual (modal + keuntungan), stok, dan status aktif.
+* ✅ **Tinggal Edit-Edit Saja**: Setelah auto-crawl selesai, Anda hanya perlu mengedit harga jika ingin promo khusus atau menonaktifkan produk tertentu dengan switch toggle!
 
 ---
 
 ## 📑 Daftar Isi
-1. [Hierarki Produk: Memahami Struktur Kategori, Sub-Kategori, & Produk](#1-hierarki-produk-memahami-struktur-kategori-sub-kategori--produk)
-2. [Fitur Baru: Auto-Fill & Grab Data Kategori Game](#2-fitur-baru-auto-fill--grab-data-kategori-game)
-3. [Alur Tambah Produk H2H Otomatis ("Tinggal Add Auto & Edit Harga")](#3-alur-tambah-produk-h2h-otomatis-tinggal-add-auto--edit-harga)
-4. [Konfigurasi Payment Gateway Pintar (KlikQRIS & Tripay Auto-Preset)](#4-konfigurasi-payment-gateway-pintar-klikqris--tripay-auto-preset)
-5. [Menampilkan Produk di Halaman Utama (Home) Web Client](#5-menampilkan-produk-di-halaman-utama-home-web-client)
+1. [Fitur Utama: 1-Click Auto-Crawl Digiflazz](#-fitur-utama-1-click-auto-crawl-digiflazz-semua-otomatis-tinggal-edit)
+2. [Hierarki Produk: Memahami Struktur Kategori, Sub-Kategori, & Produk](#1-hierarki-produk-memahami-struktur-kategori-sub-kategori--produk)
+3. [Fitur Baru: Auto-Fill & Grab Data Kategori Game](#2-fitur-baru-auto-fill--grab-data-kategori-game)
+4. [Alur Tambah Produk H2H Otomatis ("Tinggal Add Auto & Edit Harga")](#3-alur-tambah-produk-h2h-otomatis-tinggal-add-auto--edit-harga)
+5. [Konfigurasi Payment Gateway Pintar (KlikQRIS & Tripay Auto-Preset)](#4-konfigurasi-payment-gateway-pintar-klikqris--tripay-auto-preset)
+6. [Menampilkan Produk di Halaman Utama (Home) Web Client](#5-menampilkan-produk-di-halaman-utama-home-web-client)
 
 ---
 

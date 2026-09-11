@@ -2,6 +2,7 @@ import cache from '@adonisjs/cache/services/main'
 import type { HttpContext } from '@adonisjs/core/http'
 import vine from '@vinejs/vine'
 import axios from 'axios'
+import { AutoCrawlerService } from '#services/auto_crawler_service'
 import { DigiflazzService } from '#services/digiflazz_service'
 import { GatewayTesterService } from '#services/gateway_tester_service'
 import { VipResellerService } from '#services/vip_reseller_service'
@@ -13,11 +14,62 @@ const digiflazzQueryValidator = vine.object({
   type: vine.string().optional(),
 })
 
+const autoCrawlValidator = vine.object({
+  categoryFilter: vine.string().optional(),
+  brandFilter: vine.string().optional(),
+  profitStatic: vine.number().min(0).optional(),
+  profitPercentage: vine.number().min(0).max(100).optional(),
+  targetCategoryId: vine.string().uuid().optional(),
+})
+
 const vipResellerQueryValidator = vine.object({
   serviceType: vine.enum(['prepaid', 'game', 'all']).optional(),
 })
 
 export default class ProvidersController {
+  // Digiflazz Auto-Crawl & Sync
+  async digiflazzAutoCrawl(ctx: HttpContext) {
+    try {
+      const payload = await ctx.request.validateUsing(vine.compile(autoCrawlValidator), {
+        data: ctx.request.body(),
+      })
+
+      const summary = await AutoCrawlerService.executeCrawl({
+        categoryFilter: payload.categoryFilter,
+        brandFilter: payload.brandFilter,
+        profitStatic: payload.profitStatic ?? 500,
+        profitPercentage: payload.profitPercentage ?? 0,
+        targetCategoryId: payload.targetCategoryId,
+      })
+
+      return ctx.response.json(summary)
+    } catch (err: any) {
+      console.error('[ProvidersController] digiflazzAutoCrawl error:', err)
+      return ctx.response.status(400).json({
+        success: false,
+        error: err?.message || 'Gagal melakukan auto-crawl dari Digiflazz',
+      })
+    }
+  }
+
+  // Digiflazz Available Brands
+  async digiflazzBrands(ctx: HttpContext) {
+    try {
+      const categoryFilter = ctx.request.input('categoryFilter')
+      const brands = await AutoCrawlerService.getAvailableBrands(categoryFilter)
+      return ctx.response.json({
+        success: true,
+        brands,
+      })
+    } catch (err: any) {
+      console.error('[ProvidersController] digiflazzBrands error:', err)
+      return ctx.response.status(400).json({
+        success: false,
+        error: err?.message || 'Gagal mengambil daftar brand dari Digiflazz',
+        brands: [],
+      })
+    }
+  }
   // Digiflazz Products
   async digiflazzProducts(ctx: HttpContext) {
     const query = await ctx.request.validateUsing(vine.compile(digiflazzQueryValidator), {

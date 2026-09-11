@@ -422,6 +422,8 @@ router
   .group(() => {
     router.get('/digiflazz/products', [ProvidersController, 'digiflazzProducts'])
     router.get('/digiflazz/saldo', [ProvidersController, 'digiflazzSaldo'])
+    router.get('/digiflazz/brands', [ProvidersController, 'digiflazzBrands'])
+    router.post('/digiflazz/auto-crawl', [ProvidersController, 'digiflazzAutoCrawl'])
     router.get('/vipreseller/products', [ProvidersController, 'vipResellerProducts'])
     router.get('/vipreseller/saldo', [ProvidersController, 'vipResellerSaldo'])
   })

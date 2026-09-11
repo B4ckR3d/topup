@@ -9,6 +9,7 @@ import { Trash2Icon } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import type { GetAllProductsQueryValidator } from '#validators/product'
+import { AutoCrawlDialog } from '~/components/auto-crawl-dialog'
 import Image from '~/components/image'
 import { formatDate, formatPrice } from '~/utils'
 import { apiClient } from '~/utils/axios'
@@ -99,7 +100,7 @@ export default function SectionProducts({
       }
       return next
     })
-  }, [products.data?.data])
+  }, [products.data?.data, visibleIds])
 
   const toggleSelectAll = () => {
     if (visibleIds.length === 0) return
@@ -232,45 +233,63 @@ export default function SectionProducts({
     <section className="mt-4 min-w-0">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <h2 className="text-lg font-semibold">Products</h2>
-        {productSubCategoryId && (
-          <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted/50 px-3 py-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  disabled={selectedIds.length === 0}
-                  onClick={handleBulkDelete}
-                  aria-label={`Delete Selected (${selectedIds.length})`}
-                >
-                  <Trash2Icon className="size-4" aria-hidden="true" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Delete Selected ({selectedIds.length})</TooltipContent>
-            </Tooltip>
-            <UpdateProviderPriceModal
-              productSubCategoryId={productSubCategoryId}
-              isSubCategoryActive={!!selectedSubCategory?.is_available}
-            />
-            <AddProviderProductsModal
-              productSubCategoryId={productSubCategoryId}
-              subCategoryName={selectedSubCategory?.name}
-              categoryName={categoryName}
-              isSubCategoryActive={true}
-            />
-            <AddProductModal productSubCategoryId={productSubCategoryId} />
-          </div>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <AutoCrawlDialog
+            initialBrand={categoryName}
+            triggerText={`⚡ Auto-Crawl ${categoryName || 'Digiflazz'}`}
+            variant="outline"
+            size="sm"
+          />
+          {productSubCategoryId && (
+            <div className="flex flex-wrap items-center gap-2 rounded-md bg-muted/50 px-3 py-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="destructive"
+                    disabled={selectedIds.length === 0}
+                    onClick={handleBulkDelete}
+                    aria-label={`Delete Selected (${selectedIds.length})`}
+                  >
+                    <Trash2Icon className="size-4" aria-hidden="true" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Delete Selected ({selectedIds.length})</TooltipContent>
+              </Tooltip>
+              <UpdateProviderPriceModal
+                productSubCategoryId={productSubCategoryId}
+                isSubCategoryActive={!!selectedSubCategory?.is_available}
+              />
+              <AddProviderProductsModal
+                productSubCategoryId={productSubCategoryId}
+                subCategoryName={selectedSubCategory?.name}
+                categoryName={categoryName}
+                isSubCategoryActive={true}
+              />
+              <AddProductModal productSubCategoryId={productSubCategoryId} />
+            </div>
+          )}
+        </div>
       </div>
       {!productSubCategoryId && (
         <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-6 text-center mt-4">
           <p className="text-sm font-semibold text-foreground">
-            ⚡ Pilih salah satu Sub-Kategori di atas untuk melihat & mengimpor produk H2H.
+            ⚡ Pilih salah satu Sub-Kategori di atas untuk melihat & mengimpor produk secara manual,
+            ATAU gunakan 1-Click Auto-Crawl.
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Jika belum ada sub-kategori, klik tombol <strong>"+ Add Sub Category"</strong> di atas
-            terlebih dahulu.
+          <p className="text-xs text-muted-foreground mt-1 max-w-lg mx-auto">
+            Auto-Crawl akan otomatis membuat Sub-Kategori (Diamonds, Paket, dll), mengimpor seluruh
+            produk dari Digiflazz beserta harga jual & margin, dan mengisi konfigurasi akun/input ID
+            otomatis.
           </p>
+          <div className="mt-4 flex justify-center">
+            <AutoCrawlDialog
+              initialBrand={categoryName}
+              triggerText={`⚡ Auto-Crawl Semua Produk ${categoryName || 'Sekarang'}`}
+              variant="default"
+              size="default"
+            />
+          </div>
         </div>
       )}
       {selectedSubCategory && !selectedSubCategory.is_available && (

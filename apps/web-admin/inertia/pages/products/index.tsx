@@ -31,6 +31,7 @@ import {
 import { ChevronDown, DownloadCloud, Plus } from 'lucide-react'
 import { useState } from 'react'
 import type ProductsCategoriesController from '#controllers/product_categories_controller'
+import { AutoCrawlDialog } from '~/components/auto-crawl-dialog'
 import Image from '~/components/image'
 import AdminLayout from '~/components/layout/admin-layout'
 import { formatDate } from '~/utils'
@@ -58,68 +59,77 @@ export default function ProductCategory(props: Props) {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Product Categories</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Kelola game & layanan. Klik <strong>"Kelola & Import Produk"</strong> pada kategori
-            untuk menarik produk H2H otomatis.
+            Kelola game & layanan. Gunakan <strong>"Auto-Crawl Digiflazz"</strong> untuk membuat
+            katalog game & produk secara massal otomatis!
           </p>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button className="gap-1 bg-primary font-medium shadow-sm">
-              <Plus className="size-4" />
-              <span>Add New</span>
-              <ChevronDown className="size-3.5 opacity-70" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
-              Prabayar (Prepaid)
-            </DropdownMenuLabel>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/game/create">Game</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/pulsa/create">Pulsa</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/kuota/create">Kuota Data</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/token-pln/create">Token PLN</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/e-wallet/create">E-Wallet</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/voucher/create">Voucher</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/other-prepaid/create">Other Prepaid</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
-              Pascabayar (Postpaid)
-            </DropdownMenuLabel>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/postpaid/tagihan-pln/create">Tagihan PLN</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/postpaid/pdam/create">PDAM</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/postpaid/internet/create">Internet</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/postpaid/bpjs-kesehatan/create">
-                BPJS Kesehatan
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/admin/product-categories/postpaid/bpjs-ketenagakerjaan/create">
-                BPJS Ketenagakerjaan
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex flex-wrap items-center gap-2">
+          <AutoCrawlDialog
+            triggerText="⚡ Auto-Crawl Digiflazz"
+            variant="outline"
+            className="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="gap-1 bg-primary font-medium shadow-sm">
+                <Plus className="size-4" />
+                <span>Add New</span>
+                <ChevronDown className="size-3.5 opacity-70" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
+                Prabayar (Prepaid)
+              </DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/game/create">Game</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/pulsa/create">Pulsa</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/kuota/create">Kuota Data</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/token-pln/create">Token PLN</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/e-wallet/create">E-Wallet</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/voucher/create">Voucher</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/other-prepaid/create">Other Prepaid</Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
+                Pascabayar (Postpaid)
+              </DropdownMenuLabel>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/postpaid/tagihan-pln/create">
+                  Tagihan PLN
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/postpaid/pdam/create">PDAM</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/postpaid/internet/create">Internet</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/postpaid/bpjs-kesehatan/create">
+                  BPJS Kesehatan
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/product-categories/postpaid/bpjs-ketenagakerjaan/create">
+                  BPJS Ketenagakerjaan
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       <form
         className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card/90 p-3"
