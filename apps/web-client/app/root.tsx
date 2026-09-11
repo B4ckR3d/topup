@@ -15,6 +15,7 @@ import {
 } from 'react-router'
 import type { Route } from './+types/root'
 import './app.css'
+import PwaInstallPrompt from './components/pwa-install-prompt'
 import { RouterTopLoader } from './components/top-loader'
 import { getInstance, i18nextMiddleware, localeCookie } from './middlewares/i8n'
 import { getPublicAppConfig } from './services/app-config.server'
@@ -22,6 +23,42 @@ import { getSession } from './session.server'
 import { appConfigAtom } from './store/app-config'
 
 export const middleware = [i18nextMiddleware]
+
+export const meta: Route.MetaFunction = ({ data }: { data?: any }) => {
+  const appName = data?.appConfig?.appName || 'Umbreon Store'
+  const title = `${appName} - Top Up Game & PPOB Termurah, Cepat & Terpercaya`
+  const description =
+    'Platform top up game Mobile Legends, Free Fire, PUBG, Genshin Impact, voucher game, pulsa, token PLN, dan tagihan PPOB termurah dan terpercaya 24 jam nonstop.'
+  const ogImage = 'https://umbreon.store/images/og-thumbnail.png'
+
+  return [
+    { title },
+    { name: 'description', content: description },
+    { name: 'theme-color', content: '#6366f1' },
+    { name: 'apple-mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+    { name: 'apple-mobile-web-app-title', content: appName },
+
+    // Open Graph for WhatsApp, Facebook, Telegram, Discord, etc.
+    { property: 'og:site_name', content: appName },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: title },
+    { property: 'og:description', content: description },
+    { property: 'og:image', content: ogImage },
+    { property: 'og:image:secure_url', content: ogImage },
+    { property: 'og:image:type', content: 'image/png' },
+    { property: 'og:image:width', content: '1200' },
+    { property: 'og:image:height', content: '630' },
+    { property: 'og:image:alt', content: `${appName} - Top Up Game & PPOB Terpercaya` },
+    { property: 'og:url', content: 'https://umbreon.store' },
+
+    // Twitter Card
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: title },
+    { name: 'twitter:description', content: description },
+    { name: 'twitter:image', content: ogImage },
+  ]
+}
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const i18next = getInstance(context)
@@ -77,6 +114,10 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 }
 
 export const links: Route.LinksFunction = () => [
+  { rel: 'manifest', href: '/manifest.webmanifest' },
+  { rel: 'apple-touch-icon', href: '/icons/apple-touch-icon.png', sizes: '180x180' },
+  { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/icons/favicon-32x32.png' },
+  { rel: 'icon', type: 'image/png', sizes: '16x16', href: '/icons/favicon-16x16.png' },
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
     rel: 'preconnect',
@@ -132,7 +173,12 @@ export default function App({ loaderData }: Route.ComponentProps) {
     }
   }, [loaderData?.flash])
 
-  return <Outlet />
+  return (
+    <>
+      <Outlet />
+      <PwaInstallPrompt />
+    </>
+  )
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

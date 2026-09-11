@@ -35,3 +35,11 @@ async function main() {
 }
 
 main().catch((error) => console.error(error))
+
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .catch((err) => console.error('[PWA] Service Worker registration failed:', err))
+  })
+}

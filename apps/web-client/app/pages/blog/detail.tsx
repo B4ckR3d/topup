@@ -32,6 +32,46 @@ export async function loader(args: Route.LoaderArgs) {
   }
 }
 
+export const meta: Route.MetaFunction = ({ data }: { data?: any }) => {
+  const post = data?.data?.data
+  if (!post) {
+    return [
+      { title: 'Blog & Berita - Umbreon Store' },
+      {
+        name: 'description',
+        content: 'Artikel, panduan, dan berita game terbaru dari Umbreon Store.',
+      },
+    ]
+  }
+
+  const title = `${post.title} - Umbreon Store`
+  const description =
+    post.short_description ||
+    post.description ||
+    'Baca panduan, tips, dan informasi event game terbaru di Umbreon Store.'
+
+  let ogImage =
+    post.thumbnail_url || post.image_url || 'https://umbreon.store/images/og-thumbnail.png'
+  if (ogImage.startsWith('/')) {
+    ogImage = `https://umbreon.store${ogImage}`
+  }
+
+  return [
+    { title },
+    { name: 'description', content: description },
+    { property: 'og:site_name', content: 'Umbreon Store' },
+    { property: 'og:type', content: 'article' },
+    { property: 'og:title', content: title },
+    { property: 'og:description', content: description },
+    { property: 'og:image', content: ogImage },
+    { property: 'og:image:secure_url', content: ogImage },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: title },
+    { name: 'twitter:description', content: description },
+    { name: 'twitter:image', content: ogImage },
+  ]
+}
+
 export default function BlogDetail({ loaderData }: Route.ComponentProps) {
   const routeData = loaderData as unknown as { success: boolean; data?: any; message?: string }
   const success = routeData?.success

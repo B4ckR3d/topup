@@ -36,6 +36,48 @@ export async function loader({ params }: Route.LoaderArgs) {
   }
 }
 
+export const meta: Route.MetaFunction = ({ data }: { data?: any }) => {
+  const category = data?.data
+  if (!category) {
+    return [
+      { title: 'Top Up Game & Pulsa Murah - Umbreon Store' },
+      {
+        name: 'description',
+        content:
+          'Pusat top up game online, voucher, pulsa dan PPOB termurah dan terpercaya 24 jam.',
+      },
+    ]
+  }
+
+  const name = category.name || 'Game'
+  const title = `Top Up ${name} Murah, Cepat & Terpercaya - Umbreon Store`
+  const description =
+    category.description ||
+    `Beli top up ${name} resmi dan terpercaya. Proses otomatis instan 24 jam dengan metode pembayaran terlengkap hanya di Umbreon Store.`
+
+  let ogImage =
+    category.banner_url || category.image_url || 'https://umbreon.store/images/og-thumbnail.png'
+  if (ogImage.startsWith('/')) {
+    ogImage = `https://umbreon.store${ogImage}`
+  }
+
+  return [
+    { title },
+    { name: 'description', content: description },
+    { property: 'og:site_name', content: 'Umbreon Store' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: title },
+    { property: 'og:description', content: description },
+    { property: 'og:image', content: ogImage },
+    { property: 'og:image:secure_url', content: ogImage },
+    { property: 'og:image:alt', content: title },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: title },
+    { name: 'twitter:description', content: description },
+    { name: 'twitter:image', content: ogImage },
+  ]
+}
+
 export const inquirySchema = z.object({
   product_id: z.string().min(1, 'Product ID is required'),
   voucher_id: z.string().optional(),

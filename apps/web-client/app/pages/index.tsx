@@ -1,5 +1,5 @@
 import { Suspense, useId } from 'react'
-import { Await, Link, redirect, useLoaderData } from 'react-router'
+import { Await, Link, useLoaderData } from 'react-router'
 import HomeBanner from '~/components/home/banner'
 import FastMenu from '~/components/home/fast-menu'
 import HomeProductSections from '~/components/home/product-sections'
@@ -7,6 +7,32 @@ import QuickCategoryDock from '~/components/home/quick-category-dock'
 import Image from '~/components/image'
 import { apiClient } from '~/utils/axios'
 import type { Route } from './+types'
+
+export const meta: Route.MetaFunction = () => {
+  const title = 'Umbreon Store - Top Up Game & PPOB Termurah, Cepat & Terpercaya'
+  const description =
+    'Platform top up game Mobile Legends, Free Fire, Genshin Impact, PUBG, voucher game, pulsa, token PLN, dan tagihan PPOB termurah dan otomatis 24 jam nonstop.'
+  const ogImage = 'https://umbreon.store/images/og-thumbnail.png'
+
+  return [
+    { title },
+    { name: 'description', content: description },
+    { property: 'og:site_name', content: 'Umbreon Store' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:title', content: title },
+    { property: 'og:description', content: description },
+    { property: 'og:image', content: ogImage },
+    { property: 'og:image:secure_url', content: ogImage },
+    { property: 'og:image:type', content: 'image/png' },
+    { property: 'og:image:width', content: '1200' },
+    { property: 'og:image:height', content: '630' },
+    { property: 'og:url', content: 'https://umbreon.store' },
+    { name: 'twitter:card', content: 'summary_large_image' },
+    { name: 'twitter:title', content: title },
+    { name: 'twitter:description', content: description },
+    { name: 'twitter:image', content: ogImage },
+  ]
+}
 
 export async function loader(_args: Route.LoaderArgs) {
   try {
