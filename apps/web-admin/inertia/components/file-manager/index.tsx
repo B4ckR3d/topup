@@ -228,27 +228,41 @@ export default function FileManager({
     },
   })
 
-  const getDefaultFile = useMutation({
-    mutationKey: ['getDefaultFile', defaultFileId],
-    mutationFn: async () => {
-      return await apiClient
-        .get(`/admin/file-managers/${defaultFileId}`)
-        .then((res) => {
-          // Cek apakah file ada di res.data.data atau res.data
-          const file = res.data?.data || res.data
-          if (!file || !file.url) {
-            console.warn('Default file response missing url or file:', file)
-          }
+  // Fetch default file safely once per defaultFileId
+  useEffect(() => {
+    if (!defaultFileId) {
+      fetchedDefaultIdRef.current = null
+      return
+    }
+
+    if (selectedFile?.id === defaultFileId) {
+      return
+    }
+
+    if (fetchedDefaultIdRef.current === defaultFileId) {
+      return
+    }
+
+    fetchedDefaultIdRef.current = defaultFileId
+    let isMounted = true
+
+    apiClient
+      .get(`/admin/file-managers/${defaultFileId}`)
+      .then((res) => {
+        if (!isMounted) return
+        const file = res.data?.data || res.data
+        if (file && file.id) {
           setSelectedFile(file)
-          return file
-        })
-        .catch((error) => {
-          toast.error(error.response?.data?.error || 'Failed to fetch default file')
-          console.error('Failed to fetch default file:', error)
-          throw new Error('Failed to fetch default file')
-        })
-    },
-  })
+        }
+      })
+      .catch((error) => {
+        console.warn('Default file not found or failed to fetch:', error?.message)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [defaultFileId, selectedFile?.id])
 
   const handleFileSelect = (file: InferSelectModel<typeof tb.fileManager>) => {
     if (onFilesSelected) {
@@ -293,29 +307,6 @@ export default function FileManager({
       observer.disconnect()
     }
   }, [open, fetchNextPage, hasNextPage, isFetchingNextPage])
-
-  // Fetch default file only once per defaultFileId
-  useEffect(() => {
-    if (!defaultFileId) {
-      fetchedDefaultIdRef.current = null
-      return
-    }
-
-    if (selectedFile?.id === defaultFileId) {
-      return
-    }
-
-    if (fetchedDefaultIdRef.current === defaultFileId) {
-      return
-    }
-
-    fetchedDefaultIdRef.current = defaultFileId
-    getDefaultFile.mutate(undefined, {
-      onError: () => {
-        fetchedDefaultIdRef.current = null
-      },
-    })
-  }, [defaultFileId, selectedFile?.id, getDefaultFile])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

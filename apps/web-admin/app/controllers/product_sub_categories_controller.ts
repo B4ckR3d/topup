@@ -11,26 +11,45 @@ import {
 
 export default class ProductSubCategoriesController {
   public async postCreate(ctx: HttpContext) {
+    const rawBody = ctx.request.body()
+    if (rawBody.image_id === '') {
+      delete rawBody.image_id
+    }
+
     const { image_id: imageId, ...data } = await ctx.request.validateUsing(
       vine.compile(createProductSubCategoryValidator),
       {
-        data: ctx.request.body(),
+        data: rawBody,
       },
     )
 
-    const image = await db.query.fileManager.findFirst({
-      where: eq(tb.fileManager.id, imageId),
-    })
+    let imageUrl = ''
 
-    if (!image) {
-      ctx.session.flashErrors({
-        image_id: 'Image file not found',
+    if (imageId) {
+      const image = await db.query.fileManager.findFirst({
+        where: eq(tb.fileManager.id, imageId),
       })
-      return ctx.response.redirect().back()
+      if (image) {
+        imageUrl = image.url
+      }
+    }
+
+    // Auto-inherit parent category image if not uploaded
+    if (!imageUrl && data.product_category_id) {
+      const parentCategory = await db.query.productCategories.findFirst({
+        where: eq(tb.productCategories.id, data.product_category_id),
+      })
+      if (parentCategory) {
+        imageUrl = parentCategory.image_url
+      }
+    }
+
+    if (!imageUrl) {
+      imageUrl = '/images/default-product.png'
     }
 
     await db.insert(tb.productSubCategories).values({
-      image_url: image.url,
+      image_url: imageUrl,
       ...data,
     })
 
@@ -43,26 +62,14 @@ export default class ProductSubCategoriesController {
       data: ctx.request.params(),
     })
 
-    const data = await ctx.request.validateUsing(vine.compile(updateProductSubCategoryValidator), {
-      data: ctx.request.body(),
-    })
-
-    let imageUrl: string | undefined
-
-    if (data.image_id) {
-      const image = await db.query.fileManager.findFirst({
-        where: eq(tb.fileManager.id, data.image_id),
-      })
-
-      if (!image) {
-        ctx.session.flashErrors({
-          image_id: 'Image file not found',
-        })
-        return ctx.response.redirect().back()
-      }
-
-      imageUrl = image.url
+    const rawBody = ctx.request.body()
+    if (rawBody.image_id === '') {
+      delete rawBody.image_id
     }
+
+    const data = await ctx.request.validateUsing(vine.compile(updateProductSubCategoryValidator), {
+      data: rawBody,
+    })
 
     const productSubCategory = await db.query.productSubCategories.findFirst({
       where: eq(tb.productSubCategories.id, id),
@@ -75,13 +82,25 @@ export default class ProductSubCategoriesController {
       return ctx.response.redirect().back()
     }
 
+    let imageUrl: string | undefined
+
+    if (data.image_id) {
+      const image = await db.query.fileManager.findFirst({
+        where: eq(tb.fileManager.id, data.image_id),
+      })
+
+      if (image) {
+        imageUrl = image.url
+      }
+    }
+
     const updatedData: Partial<typeof productSubCategory> = {
-      name: data.name,
-      sub_name: data.sub_name,
-      is_available: data.is_available,
-      is_featured: data.is_featured,
-      label: data.label,
-      description: data.description,
+      name: data.name ?? productSubCategory.name,
+      sub_name: data.sub_name ?? productSubCategory.sub_name,
+      is_available: data.is_available ?? productSubCategory.is_available,
+      is_featured: data.is_featured ?? productSubCategory.is_featured,
+      label: data.label ?? productSubCategory.label,
+      description: data.description ?? productSubCategory.description,
       image_url: imageUrl ?? productSubCategory.image_url,
     }
 
@@ -136,10 +155,9 @@ export default class ProductSubCategoriesController {
     })
 
     if (!productSubCategory) {
-      ctx.session.flashErrors({
+      return ctx.response.status(404).json({
         error: 'Product sub-category not found',
       })
-      return ctx.response.redirect().back()
     }
 
     const image = productSubCategory.image_url

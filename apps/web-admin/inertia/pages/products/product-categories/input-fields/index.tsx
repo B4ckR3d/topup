@@ -28,17 +28,18 @@ export default function SectionInputFields({ productCategory }: Props) {
         <AddInputFields productCategoryId={productCategory.id} />
       </div>
       <div className="mt-2">
-        {productCategory.input_on_product_category.length < 1 && (
+        {(!productCategory.input_on_product_category ||
+          productCategory.input_on_product_category.length < 1) && (
           <p className="text-sm text-center">No input found</p>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {productCategory.input_on_product_category.map((input) => (
+          {productCategory.input_on_product_category?.map((input) => (
             <Card key={input.id} className="py-0 shadow-none">
               <CardContent className="flex items-center justify-between gap-3 p-3">
                 <div>
-                  <h4 className="font-semibold text-sm">{input.input_field.identifier}</h4>
-                  <p className="text-sm text-muted-foreground">{input.input_field.type}</p>
+                  <h4 className="font-semibold text-sm">{input.input_field?.identifier || '-'}</h4>
+                  <p className="text-sm text-muted-foreground">{input.input_field?.type || '-'}</p>
                 </div>
                 <Button
                   variant="destructive"

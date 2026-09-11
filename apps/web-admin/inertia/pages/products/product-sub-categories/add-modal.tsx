@@ -13,22 +13,36 @@ import { Input } from '@umbreon/ui/components/ui/input'
 import { Label } from '@umbreon/ui/components/ui/label'
 import { Switch } from '@umbreon/ui/components/ui/switch'
 import { Textarea } from '@umbreon/ui/components/ui/textarea'
+import { PlusIcon } from 'lucide-react'
 import { useState } from 'react'
+import toast from 'react-hot-toast'
 import type { CreateProductSubCategoryValidator } from '#validators/product'
 import FileManager from '~/components/file-manager'
 
 type Props = {
   productCategoryId: string
+  categoryImage?: string
+  initialName?: string
+  triggerText?: string
+  variant?: 'default' | 'outline' | 'secondary'
+  size?: 'default' | 'sm' | 'lg' | 'icon'
 }
 
-export default function AddProductSubCategoryModal({ productCategoryId }: Props) {
+export default function AddProductSubCategoryModal({
+  productCategoryId,
+  initialName = '',
+  triggerText = '+ Add Sub Category',
+  variant = 'default',
+  size = 'sm',
+}: Props) {
   const [open, setOpen] = useState(false)
+  const [selectedFileName, setSelectedFileName] = useState<string>('')
 
   const { data, setData, errors, processing, post, reset } =
     useForm<CreateProductSubCategoryValidator>({
       product_category_id: productCategoryId,
-      image_id: '',
-      name: '',
+      image_id: undefined,
+      name: initialName,
       sub_name: '',
       description: '',
       is_available: true,
@@ -38,13 +52,22 @@ export default function AddProductSubCategoryModal({ productCategoryId }: Props)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!data.name?.trim()) {
+      toast.error('Nama Sub-Kategori wajib diisi!')
+      return
+    }
+
     post('/admin/product-sub-categories', {
       onSuccess: () => {
+        toast.success('Sub-kategori berhasil dibuat!')
         reset()
+        setSelectedFileName('')
         setOpen(false)
       },
-      onError: (error) => {
-        console.error('Error creating sub-category:', error)
+      onError: (errs) => {
+        console.error('Error creating sub-category:', errs)
+        const firstErr = Object.values(errs)[0]
+        toast.error(typeof firstErr === 'string' ? firstErr : 'Gagal membuat sub-kategori')
       },
     })
   }
@@ -52,85 +75,132 @@ export default function AddProductSubCategoryModal({ productCategoryId }: Props)
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm">Add Sub Category</Button>
+        <Button size={size} variant={variant} className="gap-1.5 font-medium">
+          <PlusIcon className="size-4" />
+          {triggerText}
+        </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-start">Add Sub Category</DialogTitle>
+          <DialogTitle className="text-start">Tambah Sub-Kategori</DialogTitle>
         </DialogHeader>
-        <form className="space-y-4">
-          <div className="max-h-32">
-            <Label className="mb-2" htmlFor="name">
-              Image <span className="text-red-500">*</span>
-            </Label>
-            <FileManager onFilesSelected={(f) => setData('image_id', f.id)} />
-            {errors.image_id && <p className="text-red-500 text-sm">{errors.image_id}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium">Gambar Sub-Kategori (Opsional)</Label>
+            <p className="text-[11px] text-muted-foreground">
+              Jika tidak dipilih, akan otomatis menggunakan gambar/logo game kategori utama.
+            </p>
+            {selectedFileName && (
+              <p className="text-xs text-primary font-medium">Dipilih: {selectedFileName}</p>
+            )}
+            <div className="mt-1">
+              <FileManager
+                onFilesSelected={(f) => {
+                  setData('image_id', f.id)
+                  setSelectedFileName(f.name || 'File terpilih')
+                }}
+              />
+            </div>
+            {errors.image_id && <p className="text-red-500 text-xs mt-1">{errors.image_id}</p>}
           </div>
+
           <div>
-            <Label className="mb-2" htmlFor="name">
-              Name <span className="text-red-500">*</span>
+            <Label className="mb-1.5 block text-xs font-medium" htmlFor="add-subcat-name">
+              Nama Sub-Kategori <span className="text-red-500">*</span>
             </Label>
-            <Input value={data.name} onChange={(e) => setData('name', e.target.value)} />
-            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
+            <Input
+              id="add-subcat-name"
+              value={data.name || ''}
+              onChange={(e) => setData('name', e.target.value)}
+              placeholder="Misal: Diamonds, Weekly Pass, Reguler, Voucher"
+            />
+            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
           </div>
+
           <div>
-            <Label className="mb-2" htmlFor="name">
-              Sub Name
+            <Label className="mb-1.5 block text-xs font-medium" htmlFor="add-subcat-subname">
+              Sub Name / Keterangan
             </Label>
-            <Input value={data.sub_name} onChange={(e) => setData('sub_name', e.target.value)} />
-            {errors.sub_name && <p className="text-red-500 text-sm">{errors.sub_name}</p>}
+            <Input
+              id="add-subcat-subname"
+              value={data.sub_name || ''}
+              onChange={(e) => setData('sub_name', e.target.value)}
+              placeholder="Misal: Proses Cepat & Aman 24 Jam"
+            />
+            {errors.sub_name && <p className="text-red-500 text-xs mt-1">{errors.sub_name}</p>}
           </div>
-          <div className="flex gap-4">
-            <div className="w-full">
-              <Label className="mb-2" htmlFor="name">
-                Available
-              </Label>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div>
+                <Label className="text-xs font-medium cursor-pointer" htmlFor="add-subcat-avail">
+                  Tersedia
+                </Label>
+                <p className="text-[11px] text-muted-foreground">Status aktif</p>
+              </div>
               <Switch
-                checked={data.is_available}
+                id="add-subcat-avail"
+                checked={!!data.is_available}
                 onCheckedChange={(checked) => setData('is_available', checked)}
               />
-              {errors.is_available && <p className="text-red-500 text-sm">{errors.is_available}</p>}
             </div>
-            <div className="w-full">
-              <Label className="mb-2" htmlFor="name">
-                Featured
-              </Label>
+
+            <div className="flex items-center justify-between rounded-lg border border-border p-3">
+              <div>
+                <Label className="text-xs font-medium cursor-pointer" htmlFor="add-subcat-feat">
+                  Featured
+                </Label>
+                <p className="text-[11px] text-muted-foreground">Tandai unggulan</p>
+              </div>
               <Switch
-                checked={data.is_featured}
+                id="add-subcat-feat"
+                checked={!!data.is_featured}
                 onCheckedChange={(checked) => setData('is_featured', checked)}
               />
-              {errors.is_featured && <p className="text-red-500 text-sm">{errors.is_featured}</p>}
             </div>
           </div>
+
           <div>
-            <Label className="mb-2" htmlFor="name">
-              Label
+            <Label className="mb-1.5 block text-xs font-medium" htmlFor="add-subcat-label">
+              Label / Badge
             </Label>
-            <Input value={data.label} onChange={(e) => setData('label', e.target.value)} />
-            {errors.label && <p className="text-red-500 text-sm">{errors.label}</p>}
+            <Input
+              id="add-subcat-label"
+              value={data.label || ''}
+              onChange={(e) => setData('label', e.target.value)}
+              placeholder="Misal: PROMO, POPULER, BEST DEAL"
+            />
+            {errors.label && <p className="text-red-500 text-xs mt-1">{errors.label}</p>}
           </div>
+
           <div>
-            <Label className="mb-2" htmlFor="name">
-              Description
+            <Label className="mb-1.5 block text-xs font-medium" htmlFor="add-subcat-desc">
+              Deskripsi
             </Label>
             <Textarea
-              value={data.description}
+              id="add-subcat-desc"
+              rows={3}
+              value={data.description || ''}
               onChange={(e) => setData('description', e.target.value)}
+              placeholder="Deskripsi singkat sub-kategori ini..."
             />
-            {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
+            {errors.description && (
+              <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+            )}
           </div>
-        </form>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="secondary" onClick={() => reset()}>
-              Cancel
-            </Button>
-          </DialogClose>
 
-          <Button onClick={handleSubmit} disabled={processing} className="ml-2">
-            {processing ? 'Creating...' : 'Create'}
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="pt-2">
+            <DialogClose asChild>
+              <Button type="button" variant="secondary" onClick={() => reset()}>
+                Batal
+              </Button>
+            </DialogClose>
+
+            <Button type="submit" disabled={processing}>
+              {processing ? 'Membuat...' : 'Buat Sub-Kategori'}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )

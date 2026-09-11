@@ -1,5 +1,5 @@
 import type { InferPageProps } from '@adonisjs/inertia/types'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type ProductsCategoriesController from '#controllers/product_categories_controller'
 import Image from '~/components/image'
 import AdminLayout from '~/components/layout/admin-layout'
@@ -13,6 +13,12 @@ export default function ProductCategoryDetail({ productCategory }: Props) {
   const [selectedSubId, setSelectedSubId] = useState<string | null>(
     productCategory.product_sub_categories?.[0]?.id ?? null,
   )
+
+  useEffect(() => {
+    if (!selectedSubId && productCategory.product_sub_categories?.length) {
+      setSelectedSubId(productCategory.product_sub_categories[0].id)
+    }
+  }, [productCategory.product_sub_categories, selectedSubId])
 
   return (
     <AdminLayout>

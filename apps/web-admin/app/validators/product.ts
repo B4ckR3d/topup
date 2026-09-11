@@ -83,26 +83,26 @@ export type ProductCategoriesQueryValidator = Infer<typeof productCategoriesQuer
 
 export const createProductSubCategoryValidator = vine.object({
   product_category_id: vine.string().uuid(),
-  image_id: vine.string().uuid(),
+  image_id: vine.string().uuid().optional().nullable(),
   name: vine.string(),
-  sub_name: vine.string().optional(),
-  description: vine.string().optional(),
+  sub_name: vine.string().optional().nullable(),
+  description: vine.string().optional().nullable(),
   is_available: vine.boolean(),
   is_featured: vine.boolean().optional(),
-  label: vine.string().optional(),
+  label: vine.string().optional().nullable(),
 })
 
 export type CreateProductSubCategoryValidator = Infer<typeof createProductSubCategoryValidator>
 
 export const updateProductSubCategoryValidator = vine.object({
-  product_category_id: vine.string().uuid().optional(),
-  image_id: vine.string().uuid().optional(),
+  product_category_id: vine.string().uuid().optional().nullable(),
+  image_id: vine.string().uuid().optional().nullable(),
   name: vine.string().optional(),
-  sub_name: vine.string().optional(),
-  description: vine.string().optional(),
+  sub_name: vine.string().optional().nullable(),
+  description: vine.string().optional().nullable(),
   is_available: vine.boolean().optional(),
   is_featured: vine.boolean().optional(),
-  label: vine.string().optional(),
+  label: vine.string().optional().nullable(),
 })
 
 export type UpdateProductSubCategoryValidator = Infer<typeof updateProductSubCategoryValidator>
